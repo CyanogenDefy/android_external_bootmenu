@@ -16,7 +16,7 @@ LOCAL_PATH := $(my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE    := 2nd-init
+LOCAL_MODULE    := 2nd-init-test
 LOCAL_SRC_FILES := 2nd-init.c
 
 
@@ -32,6 +32,9 @@ LOCAL_MODULE_TAGS := eng
 LOCAL_STATIC_LIBRARIES :=
 LOCAL_STATIC_LIBRARIES += libstdc++ libc libm
 
+ifeq ($(TARGET_PRODUCT),cyanogen_jordan)
+LOCAL_MODULE_PATH := $(PRODUCT_OUT)/system/bootmenu/binary
+endif
 
 include $(BUILD_EXECUTABLE)
 

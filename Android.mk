@@ -17,9 +17,9 @@ LOCAL_MODULE := bootmenu
 
 LOCAL_FORCE_STATIC_EXECUTABLE := true
 
-BOOTMENU_VERSION := 0.8.6
+BOOTMENU_VERSION := 0.8.7-open
 
-LOCAL_CFLAGS += -DBOOTMENU_VERSION=$(BOOTMENU_VERSION)
+LOCAL_CFLAGS += -DBOOTMENU_VERSION="${BOOTMENU_VERSION}"
 
 
 LOCAL_MODULE_TAGS := eng
@@ -29,6 +29,9 @@ LOCAL_STATIC_LIBRARIES :=
 LOCAL_STATIC_LIBRARIES += libminui libpixelflinger_static libpng libz
 LOCAL_STATIC_LIBRARIES += libstdc++ libc libcutils 
 
+ifeq ($(TARGET_PRODUCT),cyanogen_jordan)
+LOCAL_MODULE_PATH := $(PRODUCT_OUT)/system/bootmenu/binary
+endif
 
 include $(BUILD_EXECUTABLE)
 
@@ -36,6 +39,7 @@ include $(BUILD_EXECUTABLE)
 include $(CLEAR_VARS)
 
 include $(commands_bootmenu_local_path)/minui/Android.mk
+include $(commands_bootmenu_local_path)/2nd-init/Android.mk
 
 endif   # TARGET_ARCH == arm
 endif    # !TARGET_SIMULATOR
