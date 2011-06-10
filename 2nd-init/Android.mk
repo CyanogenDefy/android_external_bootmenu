@@ -16,7 +16,7 @@ LOCAL_PATH := $(my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE    := 2nd-init-test
+LOCAL_MODULE    := 2nd-init
 LOCAL_SRC_FILES := 2nd-init.c
 
 

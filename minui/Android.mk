@@ -7,6 +7,6 @@ LOCAL_C_INCLUDES +=\
     external/libpng\
     external/zlib
 
-LOCAL_MODULE := libminui
+LOCAL_MODULE := libminui_bm
 
 include $(BUILD_STATIC_LIBRARY)
