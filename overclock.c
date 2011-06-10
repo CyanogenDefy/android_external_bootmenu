@@ -23,6 +23,8 @@
 #include "minui/minui.h"
 #include "bootmenu_ui.h"
 
+#undef USE_4_CLOCK_LEVELS
+
 struct overclock_config
 {
  const char *name;
@@ -433,11 +435,16 @@ show_menu_overclock(void) {
     sprintf(items[3], "  +Clk1: [%d] -->", get_overclock_value("clk1"));
     sprintf(items[4], "  +Clk2: [%d] -->", get_overclock_value("clk2"));
     sprintf(items[5], "  +Clk3: [%d] -->", get_overclock_value("clk3"));
+#ifdef USE_4_CLOCK_LEVELS
     sprintf(items[6], "  +Clk4: [%d] --> (*req 2.3.3 kernel)", get_overclock_value("clk4"));
+    sprintf(items[10], "  +Vsel4: [%d] --> (*req 2.3.3 kernel)", get_overclock_value("vsel4"));
+#else
+    strcpy(items[6], "  ----------------------");
+    strcpy(items[10], "  ----------------------");
+#endif
     sprintf(items[7], "  +Vsel1: [%d] -->", get_overclock_value("vsel1"));
     sprintf(items[8], "  +Vsel2: [%d] -->", get_overclock_value("vsel2"));
     sprintf(items[9], "  +Vsel3: [%d] -->", get_overclock_value("vsel3"));
-    sprintf(items[10], "  +Vsel4: [%d] --> (*req 2.3.3 kernel)", get_overclock_value("vsel4"));
     sprintf(items[11], "  +con_up_threshold: [%d] -->", get_overclock_value("con_up_threshold"));
     sprintf(items[12], "  +con_down_threshold: [%d] -->", get_overclock_value("con_down_threshold"));
     sprintf(items[13], "  +con_freq_step: [%d] -->", get_overclock_value("con_freq_step"));
@@ -474,8 +481,13 @@ show_menu_overclock(void) {
       case OVERCLOCK_CLOCK3:
         set_overclock_value("clk3", menu_set_value("Clk3", get_overclock_value("clk3"), 200, 2000, 10)); break;
 
+#ifdef USE_4_CLOCK_LEVELS
       case OVERCLOCK_CLOCK4:
         set_overclock_value("clk4", menu_set_value("Clk4", get_overclock_value("clk4"), 200, 2000, 10)); break;
+
+      case OVERCLOCK_VSEL4:
+        set_overclock_value("vsel4", menu_set_value("Vsel4", get_overclock_value("vsel4"), 10, 100, 1)); break;
+#endif
 
       case OVERCLOCK_VSEL1:
         set_overclock_value("vsel1", menu_set_value("Vsel1", get_overclock_value("vsel1"), 10, 100, 1)); break;
@@ -485,9 +497,6 @@ show_menu_overclock(void) {
 
       case OVERCLOCK_VSEL3:
         set_overclock_value("vsel3", menu_set_value("Vsel3", get_overclock_value("vsel3"), 10, 100, 1)); break;
-
-      case OVERCLOCK_VSEL4:
-        set_overclock_value("vsel4", menu_set_value("Vsel4", get_overclock_value("vsel4"), 10, 100, 1)); break;
 
       case OVERCLOCK_CON_UP_THRESHOLD:
         set_overclock_value("con_up_threshold", menu_set_value("con_up_threshold", get_overclock_value("con_up_threshold"), 1, 100, 1)); break;
