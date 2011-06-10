@@ -218,15 +218,15 @@ show_menu_recovery(void) {
 
   switch (chosen_item) {
     case RECOVERY_CUSTOM:
-      ui_print("Start Custom Recovery..\n");
-      ui_print("Wait plz....more 3+ seconds\n");
+      ui_print("Starting Custom Recovery..\n");
+      ui_print("This can take a couple of seconds.\n");
       status = exec_script(FILE_CUSTOMRECOVERY, ENABLE);
       if (status)
         break;
       return 1;
 
     case RECOVERY_STOCK:
-      ui_print("Reboot Stock Recovery..\n");
+      ui_print("Rebooting to Stock Recovery..\n");
 
       args = malloc(sizeof(char*) * 3);
       args[0] = FILE_STOCKRECOVERY;

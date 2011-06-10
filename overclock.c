@@ -397,7 +397,7 @@ show_menu_overclock(void) {
     items[22] = (char*)malloc(sizeof(char)*64);
     items[23] = (char*)malloc(sizeof(char)*64);
     items[24] = (char*)malloc(sizeof(char)*64);
-    items[25] = "  [Set defalut(*req reboot/don't save!!)]";
+    items[25] = "  [Set defaults(*req reboot/don't save!!)]";
     items[26] = "  [Save]";
     items[27] = "  --Go Back";
     items[28] = NULL;
@@ -532,15 +532,15 @@ show_menu_overclock(void) {
         set_overclock_value("smt_ramp_up_step", menu_set_value("smt_ramp_up_step", get_overclock_value("smt_ramp_up_step"), 100000, 500000, 10000)); break;
 
       case OVERCLOCK_SAVE:
-        ui_print("Save!!....");
+        ui_print("Saving.... ");
         set_overclock_config();
-        ui_print("Done..\n");
+        ui_print("Done.\n");
         break;
 
       case OVERCLOCK_DEFAULT:
-        ui_print("Set defalut!!....require reboot..");
+        ui_print("Set defaults...");
         remove(FILE_OVERCLOCK_CONF);
-        ui_print("Done..\n");
+        ui_print("Done. Please reboot.\n");
         break;
 
       default:
