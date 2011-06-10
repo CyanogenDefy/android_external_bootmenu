@@ -229,7 +229,7 @@ show_menu_recovery(void) {
       ui_print("Rebooting to Stock Recovery..\n");
 
       args = malloc(sizeof(char*) * 3);
-      args[0] = FILE_STOCKRECOVERY;
+      args[0] = (char *) FILE_STOCKRECOVERY;
       args[1] = "recovery";
       args[2] = NULL;
 
@@ -516,7 +516,7 @@ exec_script(const char* filename, int ui) {
   chmod(filename, 0755);
 
   args = malloc(sizeof(char*) * 2);
-  args[0] = filename;
+  args[0] = (char *) filename;
   args[1] = NULL;
 
   status = exec_and_wait(args);
