@@ -25,6 +25,9 @@ int
 show_menu_system(void);
 
 int
+show_menu_overclock(void);
+
+int
 show_menu_tools(void);
 
 int

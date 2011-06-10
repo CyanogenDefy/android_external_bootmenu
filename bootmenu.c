@@ -26,6 +26,7 @@
 
 #include "common.h"
 #include "extendedcommands.h"
+#include "overclock.h"
 #include "minui/minui.h"
 #include "bootmenu_ui.h"
 
@@ -124,8 +125,10 @@ prompt_and_wait() {
     switch (chosen_item) {
       case ITEM_BOOT:
         if (show_menu_boot()) return; else break;
-      case ITEM_SYSTEM:
-        if (show_menu_system()) return; else break;
+//    case ITEM_SYSTEM:
+//      if (show_menu_system()) return; else break;
+      case ITEM_OVERCLOCK:
+	if (show_menu_overclock()) return; else break;
       case ITEM_RECOVERY:
         if (show_menu_recovery()) return; else break;
       case ITEM_TOOLS:

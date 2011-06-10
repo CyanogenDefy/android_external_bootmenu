@@ -27,7 +27,7 @@ char* MENU_HEADERS[] = { "By ga1axy@rvr.kr",
                          NULL };
 
 char* MENU_ITEMS[] = { "  +Boot -->",
-                       "  +System -->",
+                       "  +CPU Settings -->",
                        "  +Recovery -->",
                        "  +Tools -->",
                        "  [Reboot System]",

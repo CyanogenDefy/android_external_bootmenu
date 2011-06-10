@@ -181,6 +181,10 @@ menu_overclock_status(int intl_value) {
   return mode;
 }
 
+
+#define MENU_SYSTEM ""
+#define MENU_OVERCLOCK " CPU settings -->"
+
 int
 menu_overclock_scaling(void) {
 
@@ -195,9 +199,10 @@ menu_overclock_scaling(void) {
   static char** title_headers = NULL;
 
   if (title_headers == NULL) {
-    char* headers[] = { " # System --> Overclock --> Scaling -->",
+    char* headers[] = { " #" MENU_SYSTEM MENU_OVERCLOCK " Scaling -->",
                         "",
                         NULL };
+
     title_headers = prepend_title((const char**)headers);
   }
 
@@ -369,7 +374,7 @@ show_menu_overclock(void) {
   int select = 0;
 
   if (title_headers == NULL) {
-    char* headers[] = { " # System --> Overclock -->",
+    char* headers[] = { " #" MENU_SYSTEM MENU_OVERCLOCK,
                         "",
                         NULL };
     title_headers = prepend_title((const char**)headers);
