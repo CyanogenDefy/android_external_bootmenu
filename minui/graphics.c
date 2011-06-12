@@ -46,6 +46,7 @@ static GGLSurface gr_framebuffer[2];
 static GGLSurface gr_mem_surface;
 static unsigned gr_active_fb = 0;
 
+static void * gr_fontmem = NULL;
 static int gr_fb_fd = -1;
 static int gr_vt_fd = -1;
 
@@ -110,12 +111,12 @@ static int get_framebuffer(GGLSurface *fb)
 }
 
 static void get_memory_surface(GGLSurface* ms) {
-  ms->version = sizeof(*ms);
-  ms->width = vi.xres;
-  ms->height = vi.yres;
-  ms->stride = vi.xres;
-  ms->data = malloc(vi.xres * vi.yres * 2);
-  ms->format = GGL_PIXEL_FORMAT_RGB_565;
+    ms->version = sizeof(*ms);
+    ms->width = vi.xres;
+    ms->height = vi.yres;
+    ms->stride = vi.xres;
+    ms->data = malloc(vi.xres * vi.yres * 2);
+    ms->format = GGL_PIXEL_FORMAT_RGB_565;
 }
 
 static void set_active_framebuffer(unsigned n)
@@ -244,6 +245,7 @@ static void gr_init_font(void)
     ftex = &gr_font->texture;
 
     bits = malloc(font.width * font.height);
+    gr_fontmem = (void *) bits;
 
     ftex->version = sizeof(*ftex);
     ftex->width = font.width;
@@ -305,7 +307,6 @@ int gr_init(void)
 
 void gr_exit(void)
 {
-//  gr_fb_clear(&gr_mem_surface);
     gr_fb_clear(&gr_framebuffer[0]);
     gr_fb_clear(&gr_framebuffer[1]);
 
@@ -315,15 +316,13 @@ void gr_exit(void)
     close(gr_fb_fd);
     gr_fb_fd = -1;
 
-    free(gr_mem_surface.data);
-
-//to check :
-//    free(gr_framebuffer[0].data);
-//    free(gr_framebuffer[1].data);
-
     ioctl(gr_vt_fd, KDSETMODE, (void*) KD_GRAPHICS);
 //    ioctl(gr_vt_fd, KDSETMODE, (void*) KD_TEXT);
     close(gr_vt_fd);
+
+    if (gr_fontmem) free(gr_fontmem);
+    if (gr_mem_surface.data) free(gr_mem_surface.data);
+
     gr_vt_fd = -1;
 }
 
