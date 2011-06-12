@@ -19,7 +19,7 @@ LOCAL_SRC_FILES := \
 
 LOCAL_FORCE_STATIC_EXECUTABLE := true
 
-BOOTMENU_VERSION := 0.8.8-defy
+BOOTMENU_VERSION := 0.8.9-defy
 LOCAL_CFLAGS += -DBOOTMENU_VERSION="${BOOTMENU_VERSION}"
 
 LOCAL_STATIC_LIBRARIES :=
@@ -27,7 +27,7 @@ LOCAL_STATIC_LIBRARIES += libminui_bm libpixelflinger_static libpng libz
 LOCAL_STATIC_LIBRARIES += libstdc++ libc libcutils 
 
 ifeq ($(TARGET_PRODUCT),cyanogen_jordan)
-	LOCAL_MODULE_PATH := $(PRODUCT_OUT)/system/bin
+    LOCAL_MODULE_PATH := $(PRODUCT_OUT)/system/bin
 endif
 include $(BUILD_EXECUTABLE)
 

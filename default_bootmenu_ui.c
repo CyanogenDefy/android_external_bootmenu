@@ -19,7 +19,7 @@
 #include "bootmenu_ui.h"
 #include "common.h"
 
-char* MENU_HEADERS[] = { "By ga1axy@rvr.kr",
+char* MENU_HEADERS[] = { "By ga1axy@rvr.kr and XDA CyanogenDefy Team",
                          "",
                          "Use Volume Up/Down to highlight",
                          "Power Key to select..",
@@ -57,6 +57,10 @@ int device_handle_key(int key_code, int visible) {
             case KEY_SEND:
             case KEY_ENTER:
                 return SELECT_ITEM;
+
+            case KEY_BACKSPACE:
+            case KEY_BACK:
+                return 0;
         }
     }
 

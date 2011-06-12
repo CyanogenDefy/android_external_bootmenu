@@ -51,6 +51,12 @@ static int gr_vt_fd = -1;
 
 static struct fb_var_screeninfo vi;
 
+static void gr_fb_clear(GGLSurface *fb) {
+    if (fb && fb->data) {
+        memset(fb->data, 0, vi.yres * vi.xres * 2);
+    }
+}
+
 static int get_framebuffer(GGLSurface *fb)
 {
     int fd;
@@ -88,7 +94,7 @@ static int get_framebuffer(GGLSurface *fb)
     fb->stride = vi.xres;
     fb->data = bits;
     fb->format = GGL_PIXEL_FORMAT_RGB_565;
-    memset(fb->data, 0, vi.yres * vi.xres * 2);
+    gr_fb_clear(fb);
 
     fb++;
 
@@ -98,7 +104,7 @@ static int get_framebuffer(GGLSurface *fb)
     fb->stride = vi.xres;
     fb->data = (void*) (((unsigned) bits) + vi.yres * vi.xres * 2);
     fb->format = GGL_PIXEL_FORMAT_RGB_565;
-    memset(fb->data, 0, vi.yres * vi.xres * 2);
+    gr_fb_clear(fb);
 
     return fd;
 }
@@ -299,6 +305,10 @@ int gr_init(void)
 
 void gr_exit(void)
 {
+//  gr_fb_clear(&gr_mem_surface);
+    gr_fb_clear(&gr_framebuffer[0]);
+    gr_fb_clear(&gr_framebuffer[1]);
+
     set_final_framebuffer(0);
 //    set_final_framebuffer(1);
 
@@ -306,6 +316,10 @@ void gr_exit(void)
     gr_fb_fd = -1;
 
     free(gr_mem_surface.data);
+
+//to check :
+//    free(gr_framebuffer[0].data);
+//    free(gr_framebuffer[1].data);
 
     ioctl(gr_vt_fd, KDSETMODE, (void*) KD_GRAPHICS);
 //    ioctl(gr_vt_fd, KDSETMODE, (void*) KD_TEXT);
