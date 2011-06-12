@@ -45,8 +45,8 @@ static gr_surface gProgressBarEmpty;
 static gr_surface gProgressBarFill;
 
 static const struct { gr_surface* surface; const char *name; } BITMAPS[] = {
-    { &gBackgroundIcon[BACKGROUND_ICON_INSTALLING], "icon_installing" },
-    { &gBackgroundIcon[BACKGROUND_ICON_ERROR],      "icon_error" },
+    { &gBackgroundIcon[BACKGROUND_DEFAULT], "background" },
+    { &gBackgroundIcon[BACKGROUND_DEFAULT], "background" },
     { &gProgressBarIndeterminate[0],    "indeterminate1" },
     { &gProgressBarIndeterminate[1],    "indeterminate2" },
     { &gProgressBarIndeterminate[2],    "indeterminate3" },
@@ -113,7 +113,7 @@ static void draw_progress_locked()
 {
     if (gProgressBarType == PROGRESSBAR_TYPE_NONE) return;
 
-    int iconHeight = gr_get_height(gBackgroundIcon[BACKGROUND_ICON_INSTALLING]);
+    int iconHeight = gr_get_height(gBackgroundIcon[BACKGROUND_ALT]);
     int width = gr_get_width(gProgressBarEmpty);
     int height = gr_get_height(gProgressBarEmpty);
 

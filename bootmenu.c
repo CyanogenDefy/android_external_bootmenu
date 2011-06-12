@@ -128,7 +128,7 @@ prompt_and_wait() {
 //    case ITEM_SYSTEM:
 //      if (show_menu_system()) return; else break;
       case ITEM_OVERCLOCK:
-	if (show_menu_overclock()) return; else break;
+        if (show_menu_overclock()) return; else break;
       case ITEM_RECOVERY:
         if (show_menu_recovery()) return; else break;
       case ITEM_TOOLS:
@@ -207,7 +207,7 @@ run_bootmenu(void) {
 
     if (status != INSTALL_SUCCESS) {
       ui_init();
-      ui_set_background(BACKGROUND_ICON_ERROR);
+      ui_set_background(BACKGROUND_DEFAULT);
 
       ui_show_text(ENABLE);
       LOGI("Start Android BootMenu....\n");
