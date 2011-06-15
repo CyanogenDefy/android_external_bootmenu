@@ -212,7 +212,7 @@ show_menu_recovery(void) {
     title_headers = prepend_title((const char**)headers);
   }
 
-  char* items[] =  { "  [Lastest Recovery]",
+  char* items[] =  { "  [Latest Recovery]",
                      "  [Stable Recovery]",
                      "  [Stock Recovery]",
                      "  --Go Back.",
