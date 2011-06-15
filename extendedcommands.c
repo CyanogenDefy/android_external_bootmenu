@@ -196,7 +196,8 @@ int
 show_menu_recovery(void) {
 
 #define RECOVERY_CUSTOM     0
-#define RECOVERY_STOCK      1
+#define RECOVERY_STABLE     1
+#define RECOVERY_STOCK      2
 
   static char** title_headers = NULL;
   int status;
@@ -209,7 +210,8 @@ show_menu_recovery(void) {
     title_headers = prepend_title((const char**)headers);
   }
 
-  char* items[] =  { "  [Custom Recovery]",
+  char* items[] =  { "  [Lastest Recovery]",
+                     "  [Stable Recovery]",
                      "  [Stock Recovery]",
                      "  --Go Back.",
                      NULL };
@@ -218,9 +220,17 @@ show_menu_recovery(void) {
 
   switch (chosen_item) {
     case RECOVERY_CUSTOM:
-      ui_print("Starting Custom Recovery..\n");
+      ui_print("Starting Recovery..\n");
       ui_print("This can take a couple of seconds.\n");
       status = exec_script(FILE_CUSTOMRECOVERY, ENABLE);
+      if (status)
+        break;
+      return 1;
+
+    case RECOVERY_STABLE:
+      ui_print("Starting Stable Recovery..\n");
+      ui_print("This can take a couple of seconds.\n");
+      status = exec_script(FILE_STABLERECOVERY, ENABLE);
       if (status)
         break;
       return 1;

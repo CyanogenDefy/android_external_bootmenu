@@ -12,6 +12,7 @@ static const char *FILE_ROOT = "/system/bootmenu/script/unroot.sh";
 static const char *FILE_UNINSTALL = "/system/bootmenu/script/uninstall.sh";
 static const char *FILE_OVERCLOCK = "/system/bootmenu/script/overclock.sh";
 static const char *FILE_CUSTOMRECOVERY = "/system/bootmenu/script/recovery.sh";
+static const char *FILE_STABLERECOVERY = "/system/bootmenu/script/recovery_stable.sh";
 
 static const char *FILE_DEFAULTBOOTMODE = "/system/bootmenu/config/default_bootmode.conf";
 static const char *FILE_OVERCLOCK_CONF = "/system/bootmenu/config/overclock.conf";
