@@ -85,9 +85,7 @@ long get_free_address(pid_t pid)
 
 	while(fgets(line, 85, fp) != NULL)
 	{
-		sscanf(line, "%lx-%*lx %*s %*s %s", &addr,
-		str, str, str,
-		str);
+		sscanf(line, "%lx-%*8x %*s %*s %s", &addr, str);
 		if(strcmp(str, "00:00") == 0)
 			break;
 	}
@@ -117,9 +115,7 @@ void get_base_image_address(pid_t pid, long* address, long* size)
 
 	if(fgets(line, 85, fp) != NULL)
 	{
-		sscanf(line, "%lx-%lx %*s %*s %s", &start_address, &end_address,
-		str, str,
-		str);
+		sscanf(line, "%lx-%lx %*s %*s %s", &start_address, &end_address, str);
 		*address = start_address;
 		*size = end_address - start_address;
 	}
@@ -218,19 +214,21 @@ int main(int argc, char** argv)
 
 	//now look for the bytes
 	long c,d;
-	char execve_code[] = {	0x90, 0x00, 0x2D, 0xE9,
-							0x0B, 0x70, 0xA0, 0xE3,
-							0x00, 0x00, 0x00, 0xEF,
-							0x90, 0x00, 0xBD, 0xE8 };
+	char execve_code[] = {
+		0x90, 0x00, 0x2D, 0xE9,
+		0x0B, 0x70, 0xA0, 0xE3,
+		0x00, 0x00, 0x00, 0xEF,
+		0x90, 0x00, 0xBD, 0xE8
+	};
 
 	long execve_address = 0;
 	c = 0;
 
-	while (c < image_size - sizeof(execve_code))
+	while (c < image_size - (long) sizeof(execve_code))
 	{
 		int found = 1;
 
-		for(d = 0; d < sizeof(execve_code); d++)
+		for(d = 0; d < (long) sizeof(execve_code); d++)
 		{
 			if (init_image[c+d] != execve_code[d])
 			{
