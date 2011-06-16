@@ -108,31 +108,33 @@ show_menu_system(void) {
   }
 
   char* items[] =  { "  +Overclock -->",
-                     "  [UnRooting]",
-                     "  [Uninstall BootMenu]",
+//                   "  [UnRooting]",
+//                   "  [Uninstall BootMenu]",
                      "  --Go Back.",
                       NULL };
 
   for (;;) {
 
+/*
     if ((stat("/system/app/Superuser.apk", &buf) < 0) && (stat("/system/app/superuser.apk", &buf) < 0))
       items[1] = "  [Rooting]";
     else
       items[1] = "  [UnRooting]";
-
+*/
     int chosen_item = get_menu_selection(title_headers, items, 1, select);
 
     switch (chosen_item) {
+
+      case SYSTEM_OVERCLOCK:
+        status = show_menu_overclock();
+        break;
+
+/*
       case SYSTEM_ROOT:
         ui_print("[Un]Rooting....");
         status = exec_script(FILE_ROOT, ENABLE);
         ui_print("Done..\n");
         break;
-  
-      case SYSTEM_OVERCLOCK:
-        status = show_menu_overclock();
-        break;
-
       case SYSTEM_UNINSTALL:
         ui_print("Uninstall BootMenu....");
         status = exec_script(FILE_UNINSTALL, ENABLE);
@@ -140,7 +142,7 @@ show_menu_system(void) {
         ui_print("******** Plz reboot now.. ********\n");
         ui_print("******** Plz reboot now.. ********\n");
         return 0;
-  
+*/  
       default:
         return 0;
     }
@@ -210,7 +212,7 @@ show_menu_recovery(void) {
     title_headers = prepend_title((const char**)headers);
   }
 
-  char* items[] =  { "  [Lastest Recovery]",
+  char* items[] =  { "  [Latest Recovery]",
                      "  [Stable Recovery]",
                      "  [Stock Recovery]",
                      "  --Go Back.",
