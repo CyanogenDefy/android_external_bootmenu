@@ -51,10 +51,10 @@ show_menu_boot(void) {
     title_headers = prepend_title((const char**)headers);
   }
 
-  char* items[6] =  { "  +Set Default: [Normal] -->",
-                      "  [Normal]",
-                      "  [2nd-init]",
-                      "  [2nd-boot]",
+  char* items[6] =  { "  +Set Default: [" ITEM_2NDINIT "] -->",
+                      "  [" ITEM_NORMAL "]",
+                      "  [" ITEM_2NDINIT "]",
+                      "  [" ITEM_2NDBOOT "]",
                       "  --Go Back.",
                       NULL };
 
@@ -286,9 +286,9 @@ snd_init(int ui) {
   bypass_sign("yes");
 
   if (ui)
-    ui_print("Start 2nd-init boot....\n");
+    ui_print("Start " ITEM_2NDINIT " boot....\n");
   else
-    LOGI("Start 2nd-init boot....\n");
+    LOGI("Start " ITEM_2NDINIT " boot....\n");
 
   status = exec_script(FILE_2NDINIT, ui);
   if (status) {
@@ -321,9 +321,9 @@ snd_boot(int ui) {
   bypass_sign("yes");
 
   if (ui)
-    ui_print("Start 2nd-boot boot....\n");
+    ui_print("Start " ITEM_2NDBOOT " boot....\n");
   else
-    LOGI("Start 2nd-boot boot....\n");
+    LOGI("Start " ITEM_2NDBOOT " boot....\n");
 
   status = exec_script(FILE_2NDBOOT, ui);
   if (status) {
@@ -360,9 +360,9 @@ show_config_bootmode(void) {
   }
 
   char* items[4][2] = {
-                        { "   [Normal]", "  *[Normal]" },
-                        { "   [2nd-init]", "  *[2nd-init]" },
-                        { "   [2nd-boot]", "  *[2nd-boot]" },
+                        { "   [" ITEM_NORMAL "]", "  *[" ITEM_NORMAL "]" },
+                        { "   [" ITEM_2NDINIT "]", "  *[" ITEM_2NDINIT "]" },
+                        { "   [" ITEM_2NDBOOT "]", "  *[" ITEM_2NDBOOT "]" },
                         { "   [BootMenu]", "  *[BootMenu]" }
                       };
   for (;;) {
@@ -402,13 +402,13 @@ int
 set_bootmode(int mode) {
   switch (mode) {
     case MODE_NORMAL:
-      ui_print("Set Normal....");
+      ui_print("Set " ITEM_NORMAL "....");
       return bootmode_write("normal");
     case MODE_2NDINIT:
-      ui_print("Set 2nd-init....");
+      ui_print("Set " ITEM_2NDINIT "....");
       return bootmode_write("2nd-init");
     case MODE_2NDBOOT:
-      ui_print("Set 2nd-boot....");
+      ui_print("Set " ITEM_2NDBOOT "....");
       return bootmode_write("2nd-boot");
     case MODE_BOOTMENU:
       ui_print("Set BootMenu....");
