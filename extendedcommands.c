@@ -37,6 +37,10 @@ show_menu_boot(void) {
 #define BOOT_2NDINIT    2
 #define BOOT_2NDBOOT    3
 
+#define ITEM_NORMAL     "Normal (stock)"
+#define ITEM_2NDINIT    "2nd-init (cm7)"
+#define ITEM_2NDBOOT    "2nd-boot (cm7)"
+
   static char** title_headers = NULL;
   int status;
 
@@ -57,9 +61,9 @@ show_menu_boot(void) {
   for (;;) {
     int bootmode = get_bootmode();
     switch (bootmode) {
-      case MODE_NORMAL: items[0] = "  +Set Default: [Normal] -->"; break;
-      case MODE_2NDINIT: items[0] = "  +Set Default: [2nd-init] -->"; break;
-      case MODE_2NDBOOT: items[0] = "  +Set Default: [2nd-boot] -->"; break;
+      case MODE_NORMAL: items[0] = "  +Set Default: [" ITEM_NORMAL "] -->"; break;
+      case MODE_2NDINIT: items[0] = "  +Set Default: [" ITEM_2NDINIT "] -->"; break;
+      case MODE_2NDBOOT: items[0] = "  +Set Default: [" ITEM_2NDBOOT "] -->"; break;
       case MODE_BOOTMENU: items[0] = "  +Set Default: [BootMenu] -->"; break;
     }
 
