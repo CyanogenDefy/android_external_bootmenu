@@ -37,9 +37,9 @@ show_menu_boot(void) {
 #define BOOT_2NDINIT    2
 #define BOOT_2NDBOOT    3
 
-#define ITEM_NORMAL     "Normal (stock)"
-#define ITEM_2NDINIT    "2nd-init (cm7)"
-#define ITEM_2NDBOOT    "2nd-boot (cm7)"
+#define ITEM_NORMAL     "Normal Stock"
+#define ITEM_2NDINIT    "2nd-init CM7"
+#define ITEM_2NDBOOT    "2nd-boot CM7"
 
   static char** title_headers = NULL;
   int status;
