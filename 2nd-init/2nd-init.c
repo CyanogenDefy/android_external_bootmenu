@@ -11,6 +11,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include <sys/linux-syscalls.h>
+
 union u
 {
 	long val;
@@ -123,6 +125,48 @@ void get_base_image_address(pid_t pid, long* address, long* size)
 	fclose(fp);
 }
 
+long find_syscall(char* data, long data_size, long NR_syscall)
+{
+	long addr = 0;
+	char NR = NR_syscall - __NR_SYSCALL_BASE;
+
+	char execve_code[] = {
+		0x90, 0x00, 0x2D, 0xE9, //STMFD  SP!, {R4,R7}
+		0x0B, 0x70, 0xA0, 0xE3, //MOV    R7,  #0x0B (__NR_execve) sys/linux-syscalls.h
+		0x00, 0x00, 0x00, 0xEF, //SVC    0
+		0x90, 0x00, 0xBD, 0xE8  //LDMFD  SP!, {R4,R7}
+	};
+	
+	execve_code[4] = NR;
+	
+	long d, c = 0;
+
+	//now look for the instructions
+	while (c < data_size - (long) sizeof(execve_code))
+	{
+		int found = 1;
+
+		for(d = 0; d < (long) sizeof(execve_code); d++)
+		{
+			if (data[c+d] != execve_code[d])
+			{
+				found = 0;
+				break;
+			}
+		}
+
+		if (found)
+		{
+			addr = c;
+			break;
+		}
+
+		c+=4; //ARM aligned mode
+	}
+
+	return addr;
+}
+
 int main(int argc, char** argv)
 {
 	struct pt_regs regs;
@@ -158,7 +202,7 @@ int main(int argc, char** argv)
 	//check if PC is valid
 	if (regs.ARM_pc == 0)
 	{
-		printf("ERROR: Could get PC register value.\n");
+		printf("ERROR: Could not get PC register value.\n");
 		//return 1;
 	}
 
@@ -170,10 +214,8 @@ int main(int argc, char** argv)
 	//=>start is on 0x80A0
 	//ARM mode
 
-/* fix ga1axy@rvr.kr (2011/05/20)
-	long injected_code_address = get_free_address(1);
-	printf("Address for the injection: 0x%08lX.\n", injected_code_address);
-*/
+	long free_address = get_free_address(1);
+	printf("Address free for the injection: 0x%08lX.\n", free_address);
 
 	//nah the space on heap will be bigger
 	char injected_code[0x400];
@@ -184,16 +226,6 @@ int main(int argc, char** argv)
 
 	//find execve inside init
 	//===============================================================================
-	//
-	// find it based on these four instructions
-	//
-	// STMFD   SP!, {R4,R7}
-	// MOV     R7, #0xB
-	// SVC     0
-	// LDMFD   SP!, {R4,R7}
-	//
-	// HEX: 90002DE9 0B70A0E3 000000EF 9000BDE8
-
 	long image_base;
 	long image_size;
 	get_base_image_address(1, &image_base, &image_size);
@@ -210,41 +242,14 @@ int main(int argc, char** argv)
 	printf("image_size: 0x%08lX.\n", image_size);
 
 	char* init_image = malloc(image_size+1);
+	if (init_image == NULL) {
+		printf("Unable to alloc buffer...\n");
+		return 1;
+	}
 	getdata(1, image_base, init_image, image_size);
 
-	//now look for the bytes
-	long c,d;
-	char execve_code[] = {
-		0x90, 0x00, 0x2D, 0xE9,
-		0x0B, 0x70, 0xA0, 0xE3,
-		0x00, 0x00, 0x00, 0xEF,
-		0x90, 0x00, 0xBD, 0xE8
-	};
 
-	long execve_address = 0;
-	c = 0;
-
-	while (c < image_size - (long) sizeof(execve_code))
-	{
-		int found = 1;
-
-		for(d = 0; d < (long) sizeof(execve_code); d++)
-		{
-			if (init_image[c+d] != execve_code[d])
-			{
-				found = 0;
-				break;
-			}
-		}
-
-		if (found)
-		{
-			execve_address = image_base + c;
-			break;
-		}
-
-		c+=4; //ARM mode
-	}
+	long execve_address = find_syscall(init_image, image_size, __NR_execve);  // 0x4FA0 in 177 /init file = va 0xCFA0
 
 	if (!execve_address)
 	{
@@ -253,13 +258,23 @@ int main(int argc, char** argv)
 		ptrace(PTRACE_DETACH, 1, NULL, NULL);
 		return 5;
 	}
+	execve_address += image_base;
 
 	printf("execve located on: 0x%08lX.\n", execve_address);
 
-// fix ga1axy@rvr.kr (2011/05/20)
-	long injected_code_address = execve_address + 0x1000;
+// for 177-5
+	long injected_code_address = execve_address + 0x1000; //BLX sub_wait4 ? : we need to find a reference
+// for 179-2, execve = CFA0
+//	long injected_code_address = execve_address + 0x0FE0;
+// for 234-134, execve = 81A0, injection at 0x1089C
+//	long injected_code_address = execve_address + 0x86FC;
+	
 	printf("Address for the injection: 0x%08lX.\n", injected_code_address);
-//
+
+	long nr_wait4 = find_syscall(init_image, image_size, __NR_wait4);
+	nr_wait4 += image_base;
+	printf("Address of wait4 syscall: 0x%08lX.\n", nr_wait4);
+
 	//fill in the instructions
 	//===============================================================================
 
@@ -342,6 +357,7 @@ int main(int argc, char** argv)
 
 	//put the data
 	putdata(1, injected_code_address, injected_code, 1024);
+	printf("Jump to 0x%08lX.\n", injected_code_address);
 
 	//set the PC
 	regs.ARM_pc = injected_code_address;
@@ -350,6 +366,9 @@ int main(int argc, char** argv)
 
 	//fire it
 	printf("Detaching...\n");
+	//let some time to print output to console
+	usleep(10000);
 	ptrace(PTRACE_DETACH, 1, NULL, NULL);
+
 	return 0;
 }
