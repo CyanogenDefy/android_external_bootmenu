@@ -263,9 +263,9 @@ int main(int argc, char** argv)
 	printf("execve located on: 0x%08lX.\n", execve_address);
 
 // for 177-5
-	long injected_code_address = execve_address + 0x1000; //BLX sub_wait4 ? : we need to find a reference
+//	long injected_code_address = execve_address + 0x1000; //BLX sub_wait4 ? : we need to find a reference
 // for 179-2, execve = CFA0
-//	long injected_code_address = execve_address + 0x0FE0;
+	long injected_code_address = execve_address + 0x0FE0;
 // for 234-134, execve = 81A0, injection at 0x1089C
 //	long injected_code_address = execve_address + 0x86FC;
 	
