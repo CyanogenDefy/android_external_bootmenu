@@ -29,12 +29,6 @@ done
 # disable some duplicate busybox applets
 [ -f /sbin/reboot ] && rm /sbin/reboot
 
-## rootsh create.
-
-cp -f /system/bin/sh /rootsh
-chown 0.0 /rootsh
-chmod 6755 /rootsh
-
 ## missing system files
 
 [ ! -c /dev/tty0 ]  && ln -s /dev/tty /dev/tty0
