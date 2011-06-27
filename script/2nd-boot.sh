@@ -1,19 +1,25 @@
 #!/sbin/sh
 
 ######## BootMenu Script
-######## Execute [2nd-init] Menu
+######## Execute [2nd-boot] Menu (froyo alt 2nd-init)
 
 
 export PATH=/sbin:/system/xbin:/system/bin
 
 ######## Main Script
 
-rm /*.rc
-cp -r -f /system/bootmenu/2nd-init/* /
-chmod 755 /*.rc
-chmod 755 /system/bootmenu/binary/2nd-init
 
-# ??
+echo 1 > /sys/class/leds/red/brightness
+usleep 100000
+echo 0 > /sys/class/leds/red/brightness
+
+
+rm /*.rc
+cp -r -f /system/bootmenu/2nd-boot/* /
+chmod 755 /*.rc
+chmod 4755 /system/bootmenu/binary/2nd-boot
+
+
 umount /acct
 umount /mnt/asec
 umount /dev/cpuctl
@@ -24,6 +30,7 @@ umount /mnt/obb
 # Cleanup
 
 rm /sbin/lsof
+#rm /sbin/adbd.root
 
 ## busybox cleanup..
 for cmd in $(/sbin/busybox --list); do
@@ -32,6 +39,6 @@ done
 
 rm /sbin/busybox
 
-/system/bootmenu/binary/2nd-init
+/system/bootmenu/binary/2nd-boot
 
 exit

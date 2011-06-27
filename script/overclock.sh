@@ -1,6 +1,6 @@
 #!/system/bin/sh
 
-######## BootMenu Script v0.8.6
+######## BootMenu Script
 ######## Overclock.sh
 
 export PATH=/sbin:/system/xbin:/system/bin
@@ -38,8 +38,8 @@ SCALING_MAX="/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq"
 # smt_max_cpu_load 80
 # smt_awake_min_freq 200000
 # smt_sleep_max_freq 200000
-# smt_up_min_freq 1200000
-# smt_wakeup_freq 1200000
+# smt_up_min_freq 1000000
+# smt_wakeup_freq 1000000
 # smt_ramp_up_step 200000
 
 param_load()

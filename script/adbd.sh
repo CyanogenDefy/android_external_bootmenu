@@ -1,6 +1,6 @@
 #!/sbin/sh
 
-######## BootMenu Script v0.8.6
+######## BootMenu Script
 ######## Execute [ADB Daemon] Menu
 
 
