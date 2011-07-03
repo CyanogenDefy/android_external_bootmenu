@@ -32,31 +32,31 @@
 int
 show_menu_boot(void) {
 
-#define BOOT_DEFAULT    0
-#define BOOT_2NDINIT    1
-#define BOOT_2NDBOOT    2
-#define BOOT_NORMAL     3
+  #define BOOT_DEFAULT    0
+  #define BOOT_2NDINIT    1
+  #define BOOT_2NDBOOT    2
+  #define BOOT_NORMAL     3
 
-#define ITEM_2NDINIT    "2nd-init"
-#define ITEM_2NDBOOT    "2nd-boot"
-#define ITEM_NORMAL     "Stock"
+  #define ITEM_2NDINIT    "2nd-init"
+  #define ITEM_2NDBOOT    "2nd-boot"
+  #define ITEM_NORMAL     "Stock"
 
-  static char** title_headers = NULL;
-  int status;
+  int status, res = 0;
+  const char* headers[] = {
+        " # Boot -->",
+        "",
+        NULL
+  };
+  char** title_headers = prepend_title(headers);
 
-  if (title_headers == NULL) {
-    char* headers[] = { " # Boot -->",
-                        "",
-                        NULL };
-    title_headers = prepend_title((const char**)headers);
-  }
-
-  char* items[6] =  { "  +Set Default: [" ITEM_2NDINIT "] -->",
-                      "  [" ITEM_2NDINIT "]",
-                      "  [" ITEM_2NDBOOT "]",
-                      "  [" ITEM_NORMAL "]",
-                      "  --Go Back.",
-                      NULL };
+  char* items[6] =  {
+        "  +Set Default: [" ITEM_2NDINIT "] -->",
+        "  [" ITEM_2NDINIT "]",
+        "  [" ITEM_2NDBOOT "]",
+        "  [" ITEM_NORMAL "]",
+        "  --Go Back.",
+        NULL
+  };
 
   for (;;) {
     int bootmode = get_bootmode();
@@ -71,53 +71,63 @@ show_menu_boot(void) {
 
     switch (chosen_item) {
 
-      case BOOT_2NDINIT:
-        status = snd_init(ENABLE);
-        if (status) return 0; else return 1;
-
-      case BOOT_2NDBOOT:
-        status = snd_boot(ENABLE);
-        if (status) return 0; else return 1;
-
       case BOOT_DEFAULT:
         status = show_config_bootmode();
         break;
 
+      case BOOT_2NDINIT:
+        free(title_headers);
+        status = snd_init(ENABLE);
+        if (!status) res = 1;
+        return res;
+
+      case BOOT_2NDBOOT:
+        free(title_headers);
+        status = snd_boot(ENABLE);
+        if (!status) res = 1;
+        return res;
+
       case BOOT_NORMAL:
-        return -1;
+        res = -1;
+        break;
 
       default:
+        free(title_headers);
         return 0;
     }
   }
-  return 0;
+
+  free(title_headers);
+
+  return res;
 }
 
 #if ENABLE_MENU_SYSTEM
 int
 show_menu_system(void) {
 
-#define SYSTEM_OVERCLOCK  0
-#define SYSTEM_ROOT       1
-#define SYSTEM_UNINSTALL  2
+  #define SYSTEM_OVERCLOCK  0
+  #define SYSTEM_ROOT       1
+  #define SYSTEM_UNINSTALL  2
 
-  static char** title_headers = NULL;
   int status;
   int select = 0;
   struct stat buf;
 
-  if (title_headers == NULL) {
-    char* headers[] = { " # System -->",
-                        "",
-                        NULL };
-    title_headers = prepend_title((const char**)headers);
-  }
+  const char* headers[] = {
+        " # System -->",
+        "",
+        NULL
+  };
+  char** title_headers = prepend_title(headers);
 
-  char* items[] =  { "  +Overclock -->",
-                     "  [UnRooting]",
-                     "  [Uninstall BootMenu]",
-                     "  --Go Back.",
-                      NULL };
+  char* items[] =  {
+        "  +Overclock -->",
+        "  [UnRooting]",
+        "  [Uninstall BootMenu]",
+        "  --Go Back.",
+        NULL
+  };
 
   for (;;) {
 
@@ -144,12 +154,14 @@ show_menu_system(void) {
         ui_print("Done..\n");
         ui_print("******** Plz reboot now.. ********\n");
         ui_print("******** Plz reboot now.. ********\n");
-        return 0;
+        break;
       default:
-        return 0;
+        break;
     }
     select = chosen_item;
   }
+
+  free(title_headers);
   return 0;
 }
 #endif //ENABLE_MENU_SYSTEM
@@ -160,20 +172,21 @@ show_menu_tools(void) {
 #define TOOL_ADB     0
 #define TOOL_USB     1
 
-  static char** title_headers = NULL;
   int status;
 
-  if (title_headers == NULL) {
-    char* headers[] = { " # Tools -->",
-                        "",
-                        NULL };
-    title_headers = prepend_title((const char**)headers);
-  }
+  const char* headers[] = {
+        " # Tools -->",
+        "",
+        NULL
+  };
+  char** title_headers = prepend_title(headers);
 
-  char* items[] =  { "  [ADB Daemon]",
-                     "  [USB Mass Storage]",
-                     "  --Go Back.",
-                      NULL };
+  char* items[] =  {
+        "  [ADB Daemon]",
+        "  [USB Mass Storage]",
+        "  --Go Back.",
+        NULL
+  };
 
   int chosen_item = get_menu_selection(title_headers, items, 1, 0);
 
@@ -182,17 +195,19 @@ show_menu_tools(void) {
       ui_print("ADB Deamon....");
       status = exec_script(FILE_ADBD, ENABLE);
       ui_print("Done..\n");
-      return 0;
+      break;
 
     case TOOL_USB:
       ui_print("USB Mass Storage....");
       mount_usb_storage();
       ui_print("Done..\n");
-      return 0;
+      break;
 
     default:
-      return 0;
+      break;
   }
+
+  free(title_headers);
   return 0;
 }
 
@@ -200,26 +215,27 @@ show_menu_tools(void) {
 int
 show_menu_recovery(void) {
 
-#define RECOVERY_CUSTOM     0
-#define RECOVERY_STABLE     1
-#define RECOVERY_STOCK      2
+  #define RECOVERY_CUSTOM     0
+  #define RECOVERY_STABLE     1
+  #define RECOVERY_STOCK      2
 
-  static char** title_headers = NULL;
-  int status;
+  int status, res=0;
   char** args;
 
-  if (title_headers == NULL) {
-    char* headers[] = { " # Recovery -->",
-                        "",
-                        NULL };
-    title_headers = prepend_title((const char**)headers);
-  }
+  const char* headers[] = {
+        " # Recovery -->",
+        "",
+        NULL
+  };
+  char** title_headers = prepend_title(headers);
 
-  char* items[] =  { "  [Latest Recovery]",
-                     "  [Stable Recovery]",
-                     "  [Stock Recovery]",
-                     "  --Go Back.",
-                     NULL };
+  char* items[] =  {
+        "  [Latest Recovery]",
+        "  [Stable Recovery]",
+        "  [Stock Recovery]",
+        "  --Go Back.",
+        NULL
+  };
 
   int chosen_item = get_menu_selection(title_headers, items, 1, 0);
 
@@ -228,17 +244,15 @@ show_menu_recovery(void) {
       ui_print("Starting Recovery..\n");
       ui_print("This can take a couple of seconds.\n");
       status = exec_script(FILE_CUSTOMRECOVERY, ENABLE);
-      if (status)
-        break;
-      return 1;
+      if (!status) res = 1;
+      break;
 
     case RECOVERY_STABLE:
       ui_print("Starting Stable Recovery..\n");
       ui_print("This can take a couple of seconds.\n");
       status = exec_script(FILE_STABLERECOVERY, ENABLE);
-      if (status)
-        break;
-      return 1;
+      if (!status) res = 1;
+      break;
 
     case RECOVERY_STOCK:
       ui_print("Rebooting to Stock Recovery..\n");
@@ -253,12 +267,15 @@ show_menu_recovery(void) {
       if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
         LOGE("Error in %s\n(Status %d)\n", FILE_STOCKRECOVERY, WEXITSTATUS(status));
       }
-      return 2;
+      res = 2;
+      break;
 
-    defalut:
-      return 0;
+    default:
+      break;
   }
-  return 0;
+
+  free(title_headers);
+  return res;
 }
 
 int
@@ -349,21 +366,22 @@ snd_boot(int ui) {
 
 int
 show_config_bootmode(void) {
-  static char** title_headers = NULL;
 
-  if (title_headers == NULL) {
-    char* headers[] = { " # Boot --> Set Default -->",
-                        "",
-                        NULL };
-    title_headers = prepend_title((const char**)headers);
-  }
+  int res = -1;
+  const char* headers[] = {
+          " # Boot --> Set Default -->",
+          "",
+          NULL
+  };
+  char** title_headers = prepend_title(headers);
 
   char* items[4][2] = {
-                        { "   [" ITEM_2NDINIT "]", "  *[" ITEM_2NDINIT "]" },
-                        { "   [" ITEM_2NDBOOT "]", "  *[" ITEM_2NDBOOT "]" },
-			{ "   [" ITEM_NORMAL "]", "  *[" ITEM_NORMAL "]" },
-                        { "   [BootMenu]", "  *[BootMenu]" }
-                      };
+        { "   [" ITEM_2NDINIT "]", "  *[" ITEM_2NDINIT "]" },
+        { "   [" ITEM_2NDBOOT "]", "  *[" ITEM_2NDBOOT "]" },
+        { "   [" ITEM_NORMAL "]", "  *[" ITEM_NORMAL "]" },
+        { "   [BootMenu]", "  *[BootMenu]" }
+  };
+
   for (;;) {
     static char* options[6];
 
@@ -380,10 +398,10 @@ show_config_bootmode(void) {
     options[4] = "   --Go Back.";
     options[5] = NULL;
     
-
     int chosen_item = get_menu_selection(title_headers, options, 1, mode);
     if (chosen_item == 4) {
-      return 0;
+      res=0;
+      break;
     }
     if (set_bootmode(chosen_item) == 0) {
       ui_print("Done..\n");
@@ -394,7 +412,9 @@ show_config_bootmode(void) {
       break;
     }
   }
-  return -1;
+
+  free(title_headers);
+  return res;
 }
 
 int
