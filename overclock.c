@@ -181,9 +181,13 @@ menu_overclock_status(int intl_value) {
   return mode;
 }
 
-
-#define MENU_SYSTEM ""
-#define MENU_OVERCLOCK " CPU settings -->"
+#if ENABLE_MENU_SYSTEM
+# define MENU_SYSTEM " System -->"
+# define MENU_OVERCLOCK " Overclock -->"
+#else
+# define MENU_SYSTEM ""
+# define MENU_OVERCLOCK " CPU settings -->"
+#endif
 
 int
 menu_overclock_scaling(void) {

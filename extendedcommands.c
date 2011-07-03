@@ -359,9 +359,9 @@ show_config_bootmode(void) {
   }
 
   char* items[4][2] = {
-                        { "   [" ITEM_NORMAL "]", "  *[" ITEM_NORMAL "]" },
                         { "   [" ITEM_2NDINIT "]", "  *[" ITEM_2NDINIT "]" },
                         { "   [" ITEM_2NDBOOT "]", "  *[" ITEM_2NDBOOT "]" },
+			{ "   [" ITEM_NORMAL "]", "  *[" ITEM_NORMAL "]" },
                         { "   [BootMenu]", "  *[BootMenu]" }
                       };
   for (;;) {
@@ -400,15 +400,15 @@ show_config_bootmode(void) {
 int
 set_bootmode(int mode) {
   switch (mode) {
-    case MODE_NORMAL:
-      ui_print("Set " ITEM_NORMAL "....");
-      return bootmode_write("normal");
     case MODE_2NDINIT:
       ui_print("Set " ITEM_2NDINIT "....");
       return bootmode_write("2nd-init");
     case MODE_2NDBOOT:
       ui_print("Set " ITEM_2NDBOOT "....");
       return bootmode_write("2nd-boot");
+    case MODE_NORMAL:
+      ui_print("Set " ITEM_NORMAL "....");
+      return bootmode_write("normal");
     case MODE_BOOTMENU:
       ui_print("Set BootMenu....");
       return bootmode_write("bootmenu");
