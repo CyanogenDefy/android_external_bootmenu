@@ -1,15 +1,13 @@
 enum {
-  MODE_NORMAL,
   MODE_2NDINIT,
   MODE_2NDBOOT,
+  MODE_NORMAL,
   MODE_BOOTMENU
 };
 
 static const char *FILE_2NDINIT = "/system/bootmenu/script/2nd-init.sh";
 static const char *FILE_2NDBOOT = "/system/bootmenu/script/2nd-boot.sh";
 static const char *FILE_ADBD = "/system/bootmenu/script/adbd.sh";
-static const char *FILE_ROOT = "/system/bootmenu/script/unroot.sh";
-static const char *FILE_UNINSTALL = "/system/bootmenu/script/uninstall.sh";
 static const char *FILE_OVERCLOCK = "/system/bootmenu/script/overclock.sh";
 static const char *FILE_CUSTOMRECOVERY = "/system/bootmenu/script/recovery.sh";
 static const char *FILE_STABLERECOVERY = "/system/bootmenu/script/recovery_stable.sh";
@@ -19,11 +17,19 @@ static const char *FILE_OVERCLOCK_CONF = "/system/bootmenu/config/overclock.conf
 static const char *FILE_BYPASS = "/data/.bootmenu_bypass";
 static const char *FILE_STOCKRECOVERY = "/system/bin/reboot";
 
-int
-show_menu_boot(void);
+#if ENABLE_MENU_SYSTEM
+
+static const char *FILE_ROOT = "/system/bootmenu/script/unroot.sh";
+static const char *FILE_UNINSTALL = "/system/bootmenu/script/uninstall.sh";
 
 int
 show_menu_system(void);
+
+#endif //ENABLE_MENU_SYSTEM
+
+int
+show_menu_boot(void);
+
 
 int
 show_menu_overclock(void);

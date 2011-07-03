@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2007-2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,8 @@ enum {
 
 static const char *FILE_PRE_MENU = "/system/bootmenu/script/pre_bootmenu.sh";
 static const char *FILE_POST_MENU = "/system/bootmenu/script/post_bootmenu.sh";
+
+char** main_headers = NULL;
 
 char**
 prepend_title(const char** headers) {
@@ -111,12 +113,11 @@ static int compare_string(const void* a, const void* b) {
 
 static void
 prompt_and_wait() {
-  char** headers = prepend_title((const char**)MENU_HEADERS);
   int select = 0;
 
   for (;;) {
     ui_reset_progress();
-    int chosen_item = get_menu_selection(headers, MENU_ITEMS, 0, select);
+    int chosen_item = get_menu_selection(main_headers, MENU_ITEMS, 0, select);
 
     // device-specific code may take some action here.  It may
     // return one of the core actions handled in the switch
@@ -125,10 +126,13 @@ prompt_and_wait() {
     switch (chosen_item) {
       case ITEM_BOOT:
         if (show_menu_boot()) return; else break;
-//    case ITEM_SYSTEM:
-//      if (show_menu_system()) return; else break;
+#if ENABLE_MENU_SYSTEM
+      case ITEM_SYSTEM:
+        if (show_menu_system()) return; else break;
+#else
       case ITEM_OVERCLOCK:
         if (show_menu_overclock()) return; else break;
+#endif
       case ITEM_RECOVERY:
         if (show_menu_recovery()) return; else break;
       case ITEM_TOOLS:
@@ -161,7 +165,7 @@ wait_key(int key) {
       result = INSTALL_ERROR;
     }
     else {
-      usleep(5000);
+      usleep(50000); //50ms
     }
   }
   evt_exit();
@@ -212,7 +216,10 @@ run_bootmenu(void) {
       ui_show_text(ENABLE);
       LOGI("Start Android BootMenu....\n");
 
+      main_headers = prepend_title((const char**)MENU_HEADERS);
       prompt_and_wait();
+      free(main_headers);
+
       ui_finish();
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2007-2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,13 +33,13 @@ int
 show_menu_boot(void) {
 
 #define BOOT_DEFAULT    0
-#define BOOT_NORMAL     1
-#define BOOT_2NDINIT    2
-#define BOOT_2NDBOOT    3
+#define BOOT_2NDINIT    1
+#define BOOT_2NDBOOT    2
+#define BOOT_NORMAL     3
 
-#define ITEM_NORMAL     "Normal Stock"
-#define ITEM_2NDINIT    "2nd-init CM7"
-#define ITEM_2NDBOOT    "2nd-boot CM7"
+#define ITEM_2NDINIT    "2nd-init"
+#define ITEM_2NDBOOT    "2nd-boot"
+#define ITEM_NORMAL     "Stock"
 
   static char** title_headers = NULL;
   int status;
@@ -52,26 +52,24 @@ show_menu_boot(void) {
   }
 
   char* items[6] =  { "  +Set Default: [" ITEM_2NDINIT "] -->",
-                      "  [" ITEM_NORMAL "]",
                       "  [" ITEM_2NDINIT "]",
                       "  [" ITEM_2NDBOOT "]",
+                      "  [" ITEM_NORMAL "]",
                       "  --Go Back.",
                       NULL };
 
   for (;;) {
     int bootmode = get_bootmode();
     switch (bootmode) {
-      case MODE_NORMAL: items[0] = "  +Set Default: [" ITEM_NORMAL "] -->"; break;
-      case MODE_2NDINIT: items[0] = "  +Set Default: [" ITEM_2NDINIT "] -->"; break;
-      case MODE_2NDBOOT: items[0] = "  +Set Default: [" ITEM_2NDBOOT "] -->"; break;
       case MODE_BOOTMENU: items[0] = "  +Set Default: [BootMenu] -->"; break;
+      case MODE_2NDINIT:  items[0] = "  +Set Default: [" ITEM_2NDINIT "] -->"; break;
+      case MODE_2NDBOOT:  items[0] = "  +Set Default: [" ITEM_2NDBOOT "] -->"; break;
+      case MODE_NORMAL:   items[0] = "  +Set Default: [" ITEM_NORMAL "] -->"; break;
     }
 
     int chosen_item = get_menu_selection(title_headers, items, 1, 0);
 
     switch (chosen_item) {
-      case BOOT_NORMAL:
-        return -1;
 
       case BOOT_2NDINIT:
         status = snd_init(ENABLE);
@@ -85,6 +83,9 @@ show_menu_boot(void) {
         status = show_config_bootmode();
         break;
 
+      case BOOT_NORMAL:
+        return -1;
+
       default:
         return 0;
     }
@@ -92,6 +93,7 @@ show_menu_boot(void) {
   return 0;
 }
 
+#if ENABLE_MENU_SYSTEM
 int
 show_menu_system(void) {
 
@@ -112,19 +114,18 @@ show_menu_system(void) {
   }
 
   char* items[] =  { "  +Overclock -->",
-//                   "  [UnRooting]",
-//                   "  [Uninstall BootMenu]",
+                     "  [UnRooting]",
+                     "  [Uninstall BootMenu]",
                      "  --Go Back.",
                       NULL };
 
   for (;;) {
 
-/*
     if ((stat("/system/app/Superuser.apk", &buf) < 0) && (stat("/system/app/superuser.apk", &buf) < 0))
       items[1] = "  [Rooting]";
     else
       items[1] = "  [UnRooting]";
-*/
+
     int chosen_item = get_menu_selection(title_headers, items, 1, select);
 
     switch (chosen_item) {
@@ -132,8 +133,6 @@ show_menu_system(void) {
       case SYSTEM_OVERCLOCK:
         status = show_menu_overclock();
         break;
-
-/*
       case SYSTEM_ROOT:
         ui_print("[Un]Rooting....");
         status = exec_script(FILE_ROOT, ENABLE);
@@ -146,7 +145,6 @@ show_menu_system(void) {
         ui_print("******** Plz reboot now.. ********\n");
         ui_print("******** Plz reboot now.. ********\n");
         return 0;
-*/  
       default:
         return 0;
     }
@@ -154,6 +152,7 @@ show_menu_system(void) {
   }
   return 0;
 }
+#endif //ENABLE_MENU_SYSTEM
 
 int
 show_menu_tools(void) {
@@ -510,7 +509,7 @@ exec_and_wait(char** argp) {
   case 0:                /* child */
     sigprocmask(SIG_SETMASK, &omask, NULL);
     execve(argp[0], argp, environ);
-//    execv(argp[0], argp);
+
     fprintf(stdout, "E:Can't run %s (%s)\n", argp[0], strerror(errno));
     _exit(127);
   }
@@ -567,6 +566,9 @@ real_execute(int r_argc, char** r_argv) {
   argp[0] = real_executable;
 
   result = exec_and_wait(argp);
+
+  free(argp);
+
   if (!WIFEXITED(result) || WEXITSTATUS(result) != 0)
     return -1;
   else

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2007-2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,8 +54,8 @@ struct overclock_config overclock[] = {
   { "smt_max_cpu_load", 80 },
   { "smt_awake_min_freq", 200000 },
   { "smt_sleep_max_freq", 200000 },
-  { "smt_up_min_freq", 1200000 },
-  { "smt_wakeup_freq", 1200000 },
+  { "smt_up_min_freq", 1000000 },
+  { "smt_wakeup_freq", 1000000 },
   { "smt_ramp_up_step", 200000 },
   { NULL, 0 },
 };
@@ -382,6 +382,7 @@ show_menu_overclock(void) {
 
   get_overclock_config();
   char* items[29];
+    #define OC_MALLOC_FIRST 3
     items[3] = (char*)malloc(sizeof(char)*64);
     items[4] = (char*)malloc(sizeof(char)*64);
     items[5] = (char*)malloc(sizeof(char)*64);
@@ -404,6 +405,7 @@ show_menu_overclock(void) {
     items[22] = (char*)malloc(sizeof(char)*64);
     items[23] = (char*)malloc(sizeof(char)*64);
     items[24] = (char*)malloc(sizeof(char)*64);
+    #define OC_MALLOC_LAST 24
     items[25] = "  [Set defaults(*req reboot/don't save!!)]";
     items[26] = "  [Save]";
     items[27] = "  --Go Back";
@@ -561,6 +563,11 @@ show_menu_overclock(void) {
         return 0;
     }
     select = chosen_item;
+  }
+
+  //release mallocs
+  for (select=OC_MALLOC_FIRST; select<=OC_MALLOC_LAST; select++) {
+    free(items[select]);
   }
 
   return 0;

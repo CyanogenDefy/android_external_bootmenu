@@ -271,9 +271,12 @@ int main(int argc, char** argv)
 	
 	printf("Address for the injection: 0x%08lX.\n", injected_code_address);
 
-	long nr_wait4 = find_syscall(init_image, image_size, __NR_wait4);
-	nr_wait4 += image_base;
-	printf("Address of wait4 syscall: 0x%08lX.\n", nr_wait4);
+//	long nr_wait4 = find_syscall(init_image, image_size, __NR_wait4);
+//	nr_wait4 += image_base;
+//	printf("Address of wait4 syscall: 0x%08lX.\n", nr_wait4);
+
+	long * opcode = (long *)injected_code_address;
+	printf("Opcode at injection Address : %08lX.\n", *opcode);
 
 	//fill in the instructions
 	//===============================================================================

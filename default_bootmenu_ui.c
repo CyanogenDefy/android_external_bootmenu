@@ -27,7 +27,11 @@ char* MENU_HEADERS[] = { "By ga1axy@rvr.kr and XDA CyanogenDefy Team",
                          NULL };
 
 char* MENU_ITEMS[] = { "  +Boot -->",
+                       #if ENABLE_MENU_SYSTEM
+                       "  +System -->",
+                       #else
                        "  +CPU Settings -->",
+                       #endif
                        "  +Recovery -->",
                        "  +Tools -->",
                        "  [Reboot System]",
