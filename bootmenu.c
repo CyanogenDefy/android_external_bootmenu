@@ -40,7 +40,7 @@ enum {
 static const char *FILE_PRE_MENU = "/system/bootmenu/script/pre_bootmenu.sh";
 static const char *FILE_POST_MENU = "/system/bootmenu/script/post_bootmenu.sh";
 
-char** main_headers = NULL;
+static char** main_headers = NULL;
 
 char**
 prepend_title(const char** headers) {
@@ -54,12 +54,12 @@ prepend_title(const char** headers) {
   int count = 0;
   char** p;
   for (p = title; *p; ++p, ++count);
-  for (p = headers; *p; ++p, ++count);
+  for (p = (char**) headers; *p; ++p, ++count);
 
   char** new_headers = malloc((count+1) * sizeof(char*));
   char** h = new_headers;
   for (p = title; *p; ++p, ++h) *h = *p;
-  for (p = headers; *p; ++p, ++h) *h = *p;
+  for (p = (char**) headers; *p; ++p, ++h) *h = *p;
   *h = NULL;
 
   return new_headers;
@@ -160,7 +160,7 @@ wait_key(int key) {
 
   evt_init();
   ui_clear_key_queue();
-  for(i=0; i < 300; i++) {
+  for(i=0; i < 100; i++) {
     if(ui_key_pressed(key)) {
       result = INSTALL_ERROR;
     }
