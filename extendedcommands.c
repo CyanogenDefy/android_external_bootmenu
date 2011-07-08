@@ -438,8 +438,31 @@ set_bootmode(int mode) {
 
 int
 get_bootmode(void) {
-  FILE* f = fopen(FILE_DEFAULTBOOTMODE, "r");
+  FILE* f = fopen(FILE_BOOTMODE, "r");
   char mode[30];
+
+  if (f != NULL) {
+
+    // One-shot bootmode, bootmode.conf is deleted after
+
+    fscanf(f, "%s", mode);
+    fclose(f);
+
+    exec_script(FILE_BOOTMODE_CLEAN,DISABLE);
+
+    if (0 == strcmp(mode, "normal"))
+      return MODE_NORMAL;
+    else if (0 == strcmp(mode, "2nd-init"))
+      return MODE_2NDINIT;
+    else if (0 == strcmp(mode, "2nd-boot"))
+      return MODE_2NDBOOT;
+    else if (0 == strcmp(mode, "bootmenu"))
+      return MODE_BOOTMENU;
+    if (0 == strcmp(mode, "recovery"))
+      return MODE_RECOVERY;
+  }
+
+  f = fopen(FILE_DEFAULTBOOTMODE, "r");
 
   if (f != NULL) {
     fscanf(f, "%s", mode);
@@ -453,8 +476,6 @@ get_bootmode(void) {
       return MODE_2NDBOOT;
     else if (0 == strcmp(mode, "bootmenu"))
       return MODE_BOOTMENU;
-    else if (0 == strcmp(mode, "recovery"))
-      return MODE_RECOVERY;
     else
       return MODE_NORMAL;
   }

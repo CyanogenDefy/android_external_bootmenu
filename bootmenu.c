@@ -209,9 +209,7 @@ run_bootmenu(void) {
 
         case MODE_RECOVERY:
           led_alert("blue", DISABLE);
-          //for next reboot...
-          exec_script(FILE_BOOTRECOVERY, DISABLE);
-          status = exec_script(FILE_STABLERECOVERY, DISABLE);
+          exec_script(FILE_STABLERECOVERY, DISABLE);
           status = INSTALL_SUCCESS;
           break;
       }
