@@ -210,7 +210,7 @@ run_bootmenu(void) {
         case MODE_RECOVERY:
           led_alert("blue", DISABLE);
           //for next reboot...
-          exec_script("echo bootmenu > /system/bootmenu/config/default_bootmode.conf",DISABLE);
+          exec_script(FILE_BOOTRECOVERY, DISABLE);
           status = exec_script(FILE_STABLERECOVERY, DISABLE);
           status = INSTALL_SUCCESS;
           break;

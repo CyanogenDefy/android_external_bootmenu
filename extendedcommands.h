@@ -10,8 +10,10 @@ static const char *FILE_2NDINIT = "/system/bootmenu/script/2nd-init.sh";
 static const char *FILE_2NDBOOT = "/system/bootmenu/script/2nd-boot.sh";
 static const char *FILE_ADBD = "/system/bootmenu/script/adbd.sh";
 static const char *FILE_OVERCLOCK = "/system/bootmenu/script/overclock.sh";
+
 static const char *FILE_CUSTOMRECOVERY = "/system/bootmenu/script/recovery.sh";
 static const char *FILE_STABLERECOVERY = "/system/bootmenu/script/recovery_stable.sh";
+static const char *FILE_BOOTRECOVERY   = "/system/bootmenu/script/recovery_boot.sh";
 
 static const char *FILE_DEFAULTBOOTMODE = "/system/bootmenu/config/default_bootmode.conf";
 static const char *FILE_OVERCLOCK_CONF = "/system/bootmenu/config/overclock.conf";
