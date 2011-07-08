@@ -165,7 +165,7 @@ wait_key(int key) {
       result = INSTALL_ERROR;
     }
     else {
-      usleep(50000); //50ms
+      usleep(25000); //25ms
     }
   }
   evt_exit();
