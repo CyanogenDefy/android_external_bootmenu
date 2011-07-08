@@ -458,7 +458,7 @@ get_bootmode(void) {
       return MODE_2NDBOOT;
     else if (0 == strcmp(mode, "bootmenu"))
       return MODE_BOOTMENU;
-    if (0 == strcmp(mode, "recovery"))
+    else if (0 == strcmp(mode, "recovery"))
       return MODE_RECOVERY;
   }
 
@@ -474,10 +474,8 @@ get_bootmode(void) {
       return MODE_2NDINIT;
     else if (0 == strcmp(mode, "2nd-boot"))
       return MODE_2NDBOOT;
-    else if (0 == strcmp(mode, "bootmenu"))
-      return MODE_BOOTMENU;
     else
-      return MODE_NORMAL;
+      return MODE_BOOTMENU;
   }
   return -1;
 }
