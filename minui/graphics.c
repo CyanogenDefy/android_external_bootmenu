@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2007-2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +49,8 @@ static unsigned gr_active_fb = 0;
 static void * gr_fontmem = NULL;
 static int gr_fb_fd = -1;
 static int gr_vt_fd = -1;
+
+static int gr_vt_mode = -1;
 
 static struct fb_var_screeninfo vi;
 
@@ -108,6 +110,28 @@ static int get_framebuffer(GGLSurface *fb)
     gr_fb_clear(fb);
 
     return fd;
+}
+
+static int release_framebuffer(GGLSurface *fb) {
+    struct fb_fix_screeninfo fi;
+    void *bits;
+
+    if (gr_fb_fd < 0)
+        return -1;
+
+    if (ioctl(gr_fb_fd, FBIOGET_FSCREENINFO, &fi) < 0) {
+        perror("failed to get fb0 info");
+        return -2;
+    }
+
+    bits = fb->data;
+    if (bits == NULL)
+        return -3;
+
+    close(gr_fb_fd);
+    gr_fb_fd = -1;
+
+    return munmap(bits, fi.smem_len);
 }
 
 static void get_memory_surface(GGLSurface* ms) {
@@ -271,15 +295,21 @@ int gr_init(void)
     GGLContext *gl = gr_context;
 
     gr_init_font();
-    gr_vt_fd = open("/dev/tty0", O_RDWR | O_SYNC);
+    gr_vt_fd = open("/dev/tty", O_RDWR | O_SYNC);
+    if (gr_vt_fd < 0) {
+        gr_vt_fd = open("/dev/tty0", O_RDWR | O_SYNC);
+    }
     if (gr_vt_fd < 0) {
         // This is non-fatal; post-Cupcake kernels don't have tty0.
         perror("can't open /dev/tty0");
-    } else if (ioctl(gr_vt_fd, KDSETMODE, (void*) KD_GRAPHICS)) {
-        // However, if we do open tty0, we expect the ioctl to work.
-        perror("failed KDSETMODE to KD_GRAPHICS on tty0");
-        gr_exit();
-        return -1;
+    } else {
+        ioctl(gr_vt_fd, KDGETMODE, &gr_vt_mode);
+        if (ioctl(gr_vt_fd, KDSETMODE, (void*) KD_GRAPHICS)) {
+            // However, if we do open tty0, we expect the ioctl to work.
+            perror("failed KDSETMODE to KD_GRAPHICS on tty0");
+            gr_exit();
+            return -1;
+        }
     }
 
     gr_fb_fd = get_framebuffer(gr_framebuffer);
@@ -293,7 +323,7 @@ int gr_init(void)
     fprintf(stderr, "framebuffer: fd %d (%d x %d)\n",
             gr_fb_fd, gr_framebuffer[0].width, gr_framebuffer[0].height);
 
-        /* start with 0 as front (displayed) and 1 as back (drawing) */
+    /* start with 0 as front (displayed) and 1 as back (drawing) */
     gr_active_fb = 0;
     set_active_framebuffer(0);
     gl->colorBuffer(gl, &gr_mem_surface);
@@ -307,23 +337,40 @@ int gr_init(void)
 
 void gr_exit(void)
 {
-    gr_fb_clear(&gr_framebuffer[0]);
     gr_fb_clear(&gr_framebuffer[1]);
+    gr_fb_clear(&gr_framebuffer[0]);
+
+    //restore original vt mode (text or graphic)
+    if (gr_vt_mode != -1)
+        ioctl(gr_vt_fd, KDSETMODE, &gr_vt_mode);
+
+    //close tty
+    if (gr_vt_fd != -1) {
+        close(gr_vt_fd);
+        gr_vt_fd = -1;
+    }
 
     set_final_framebuffer(0);
-//    set_final_framebuffer(1);
 
-    close(gr_fb_fd);
-    gr_fb_fd = -1;
+    //memory buffer
+    if (gr_mem_surface.data) {
+        free(gr_mem_surface.data);
+        gr_mem_surface.data = NULL;
+    }
+    //font memory
+    if (gr_fontmem) {
+        free(gr_fontmem);
+        gr_fontmem = NULL;
+    }
 
-    ioctl(gr_vt_fd, KDSETMODE, (void*) KD_GRAPHICS);
-//    ioctl(gr_vt_fd, KDSETMODE, (void*) KD_TEXT);
-    close(gr_vt_fd);
+    //un-mmap
+    release_framebuffer(gr_framebuffer);
 
-    if (gr_fontmem) free(gr_fontmem);
-    if (gr_mem_surface.data) free(gr_mem_surface.data);
-
-    gr_vt_fd = -1;
+    //close fb0
+    if (gr_fb_fd != -1) {
+        close(gr_fb_fd);
+        gr_fb_fd = -1;
+    }
 }
 
 int gr_fb_width(void)
