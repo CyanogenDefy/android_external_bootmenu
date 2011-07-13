@@ -16,7 +16,7 @@ static const char *FILE_STABLERECOVERY  = "/system/bootmenu/script/recovery_stab
 static const char *FILE_BOOTMODE_CLEAN  = "/system/bootmenu/script/bootmode_clean.sh";
 
 static const char *FILE_DEFAULTBOOTMODE = "/system/bootmenu/config/default_bootmode.conf";
-static const char *FILE_BOOTMODE        = "/system/bootmenu/config/bootmode.conf";
+static const char *FILE_BOOTMODE        = "/cache/recovery/bootmode.conf";
 static const char *FILE_OVERCLOCK_CONF  = "/system/bootmenu/config/overclock.conf";
 static const char *FILE_BYPASS          = "/data/.bootmenu_bypass";
 static const char *FILE_STOCKRECOVERY   = "/system/bin/reboot";
