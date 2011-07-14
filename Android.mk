@@ -1,6 +1,7 @@
 ifneq ($(TARGET_SIMULATOR),true)
  ifeq ($(TARGET_ARCH),arm)
 
+ifeq ($(BOARD_USES_BOOTMENU),true)
 
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
@@ -38,7 +39,7 @@ include $(CLEAR_VARS)
 include $(commands_bootmenu_local_path)/minui/Android.mk
 include $(commands_bootmenu_local_path)/2nd-init/Android.mk
 
-
+endif
  endif # TARGET_ARCH arm
 endif  # !TARGET_SIMULATOR
 
