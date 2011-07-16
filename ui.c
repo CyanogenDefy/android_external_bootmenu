@@ -46,7 +46,7 @@ static gr_surface gProgressBarFill;
 
 static const struct { gr_surface* surface; const char *name; } BITMAPS[] = {
     { &gBackgroundIcon[BACKGROUND_DEFAULT], "background" },
-    { &gBackgroundIcon[BACKGROUND_DEFAULT], "background" },
+    { &gBackgroundIcon[BACKGROUND_ALT], "background" },
     { &gProgressBarIndeterminate[0],    "indeterminate1" },
     { &gProgressBarIndeterminate[1],    "indeterminate2" },
     { &gProgressBarIndeterminate[2],    "indeterminate3" },
@@ -353,10 +353,19 @@ void evt_exit(void)
 
 void ui_final(void)
 {
-    ui_show_text(0);
+    int i;
 
+    ev_exit();
+
+    ui_show_text(0);
     gr_exit();
-    ev_exit(); 
+
+    //free bitmaps
+    for (i = 0; BITMAPS[i].name != NULL; ++i) {
+        if (BITMAPS[i].surface != NULL) {
+            res_free_surface(BITMAPS[i].surface);
+        }
+    }
 }
 
 void ui_set_background(int icon)
@@ -524,14 +533,17 @@ void ui_show_text(int visible)
 
 int ui_wait_key()
 {
+    int key;
+
     pthread_mutex_lock(&key_queue_mutex);
     while (key_queue_len == 0) {
         pthread_cond_wait(&key_queue_cond, &key_queue_mutex);
     }
 
-    int key = key_queue[0];
+    key = key_queue[0];
     memcpy(&key_queue[0], &key_queue[1], sizeof(int) * --key_queue_len);
     pthread_mutex_unlock(&key_queue_mutex);
+
     return key;
 }
 

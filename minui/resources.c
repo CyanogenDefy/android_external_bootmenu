@@ -49,7 +49,7 @@ int res_create_surface(const char* name, gr_surface* pSurface) {
     png_structp png_ptr = NULL;
     png_infop info_ptr = NULL;
 
-    snprintf(resPath, sizeof(resPath)-1, "/system/bootmenu/images/%s.png", name);
+    snprintf(resPath, sizeof(resPath)-1, RES_IMAGES_FOLDER "/%s.png", name);
     resPath[sizeof(resPath)-1] = '\0';
     FILE* fp = fopen(resPath, "rb");
     if (fp == NULL) {
@@ -123,13 +123,13 @@ int res_create_surface(const char* name, gr_surface* pSurface) {
       png_set_palette_to_rgb(png_ptr);
     }
 
-    int y;
+    int x;
+    size_t y;
     if (channels == 3) {
         for (y = 0; y < height; ++y) {
             unsigned char* pRow = pData + y * stride;
             png_read_row(png_ptr, pRow, NULL);
 
-            int x;
             for(x = width - 1; x >= 0; x--) {
                 int sx = x * 3;
                 int dx = x * 4;
@@ -166,9 +166,12 @@ exit:
     return result;
 }
 
-void res_free_surface(gr_surface surface) {
-    GGLSurface* pSurface = (GGLSurface*) surface;
-    if (pSurface) {
-        free(pSurface);
+void res_free_surface(gr_surface* pSurface) {
+    GGLSurface* surface;
+    if (pSurface && *pSurface) {
+        surface = *pSurface;
+        free(surface);
+        *pSurface=NULL;
     }
 }
+

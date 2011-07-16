@@ -47,9 +47,12 @@ void ev_exit(void);
 int ev_get(struct input_event *ev, unsigned dont_wait);
 
 // Resources
+#ifndef RES_IMAGES_FOLDER
+#define RES_IMAGES_FOLDER "/system/bootmenu/images"
+#endif
 
 // Returns 0 if no error, else negative.
 int res_create_surface(const char* name, gr_surface* pSurface);
-void res_free_surface(gr_surface surface);
+void res_free_surface(gr_surface* pSurface);
 
 #endif

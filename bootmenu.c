@@ -211,6 +211,7 @@ run_bootmenu(void) {
           break;
 
         case MODE_BOOTMENU:
+          led_alert("blue", DISABLE);
           status = INSTALL_ERROR;
           break;
 
@@ -237,7 +238,6 @@ run_bootmenu(void) {
     }
 
     led_alert("blue", DISABLE);
-    return EXIT_SUCCESS;
   }
   return EXIT_SUCCESS;
 }

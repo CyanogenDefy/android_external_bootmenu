@@ -66,6 +66,9 @@ static int get_framebuffer(GGLSurface *fb)
     struct fb_fix_screeninfo fi;
     void *bits;
 
+    // init to prevent free of random address
+    fb->data = NULL;
+
     fd = open("/dev/graphics/fb0", O_RDWR);
     if (fd < 0) {
         perror("cannot open fb0");
@@ -135,7 +138,7 @@ static int release_framebuffer(GGLSurface *fb) {
 }
 
 static void get_memory_surface(GGLSurface* ms) {
-    ms->version = sizeof(*ms);
+    ms->version = sizeof(GGLSurface);
     ms->width = vi.xres;
     ms->height = vi.yres;
     ms->stride = vi.xres;
@@ -294,6 +297,8 @@ int gr_init(void)
     gglInit(&gr_context);
     GGLContext *gl = gr_context;
 
+    gr_mem_surface.data = NULL;
+
     gr_init_font();
     gr_vt_fd = open("/dev/tty", O_RDWR | O_SYNC);
     if (gr_vt_fd < 0) {
@@ -337,40 +342,36 @@ int gr_init(void)
 
 void gr_exit(void)
 {
-    gr_fb_clear(&gr_framebuffer[1]);
-    gr_fb_clear(&gr_framebuffer[0]);
-
-    //restore original vt mode (text or graphic)
+    // restore original vt mode (text or graphic)
     if (gr_vt_mode != -1)
         ioctl(gr_vt_fd, KDSETMODE, &gr_vt_mode);
 
-    //close tty
+    // close tty
     if (gr_vt_fd != -1) {
         close(gr_vt_fd);
         gr_vt_fd = -1;
     }
 
+    // black screen before resolution change by bootanimation.
+    // both are required to prevent some weird bunnies display
+    gr_fb_clear(&gr_framebuffer[0]);
+    gr_fb_clear(&gr_framebuffer[1]);
+
     set_final_framebuffer(0);
 
-    //memory buffer
-    if (gr_mem_surface.data) {
+    // free memory buffer
+    if (gr_mem_surface.version == sizeof(GGLSurface) && gr_mem_surface.data) {
         free(gr_mem_surface.data);
         gr_mem_surface.data = NULL;
     }
-    //font memory
+    // free font memory
     if (gr_fontmem) {
         free(gr_fontmem);
         gr_fontmem = NULL;
     }
 
-    //un-mmap
+    // un-mmap
     release_framebuffer(gr_framebuffer);
-
-    //close fb0
-    if (gr_fb_fd != -1) {
-        close(gr_fb_fd);
-        gr_fb_fd = -1;
-    }
 }
 
 int gr_fb_width(void)
