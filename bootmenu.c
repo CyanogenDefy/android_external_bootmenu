@@ -174,19 +174,26 @@ wait_key(int key) {
 
 static int
 run_bootmenu(void) {
+  int mode, status = INSTALL_SUCCESS;
   time_t start = time(NULL);
+
   LOGI("Starting bootmenu on %s", ctime(&start));
 
   if (bypass_check()) {
-    int status = INSTALL_SUCCESS;
 
+    // init rootfs and mount cache
     exec_script(FILE_PRE_MENU, DISABLE);
 
     led_alert("blue", ENABLE);
-    status = wait_key(KEY_VOLUMEDOWN);
+
+    mode = get_bootmode();
+
+    // dont wait if bootmenu or recovery mode asked
+    if (mode != MODE_BOOTMENU && mode != MODE_RECOVERY) {
+      status = wait_key(KEY_VOLUMEDOWN);
+    }
 
     if (status != INSTALL_ERROR) {
-      int mode = get_bootmode();
 
       switch (mode) {
         case MODE_2NDINIT:
