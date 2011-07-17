@@ -254,8 +254,9 @@ main(int argc, char **argv) {
     return result;
   }
   else if (argc >= 3 && 0 == strcmp(argv[2], "userdata")) {
-    real_execute(argc, argv);
+    //real_execute(argc, argv);
     result = run_bootmenu();
+    real_execute(argc, argv);
     bypass_sign("no");
     sync();
     return result;
