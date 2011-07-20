@@ -448,6 +448,7 @@ get_bootmode(void) {
     fscanf(f, "%s", mode);
     fclose(f);
 
+    //unlink(FILE_BOOTMODE);
     exec_script(FILE_BOOTMODE_CLEAN,DISABLE);
 
     if (0 == strcmp(mode, "normal"))

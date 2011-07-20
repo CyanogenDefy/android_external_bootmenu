@@ -1,9 +1,11 @@
 ifneq ($(TARGET_SIMULATOR),true)
  ifeq ($(TARGET_ARCH),arm)
 
-ifeq ($(BOARD_USES_BOOTMENU),true)
+ ifeq ($(BOARD_USES_BOOTMENU),true)
+
 
 LOCAL_PATH := $(call my-dir)
+
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := bootmenu
@@ -20,7 +22,7 @@ LOCAL_SRC_FILES := \
 
 LOCAL_FORCE_STATIC_EXECUTABLE := true
 
-BOOTMENU_VERSION := 0.9.8-defy
+BOOTMENU_VERSION := 0.9.9-defy
 LOCAL_CFLAGS += -DBOOTMENU_VERSION="${BOOTMENU_VERSION}" -DENABLE_MENU_SYSTEM=0
 
 LOCAL_STATIC_LIBRARIES :=
@@ -33,13 +35,11 @@ endif
 include $(BUILD_EXECUTABLE)
 
 
+include $(call all-makefiles-under,$(LOCAL_PATH))
 
-include $(CLEAR_VARS)
 
-include $(commands_bootmenu_local_path)/minui/Android.mk
-include $(commands_bootmenu_local_path)/2nd-init/Android.mk
+ endif # BOARD_USES_BOOTMENU
 
-endif
  endif # TARGET_ARCH arm
 endif  # !TARGET_SIMULATOR
 
