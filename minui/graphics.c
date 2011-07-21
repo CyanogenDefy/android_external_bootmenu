@@ -53,6 +53,8 @@ static int gr_vt_fd = -1;
 static int gr_vt_mode = -1;
 
 static struct fb_var_screeninfo vi;
+static struct fb_fix_screeninfo fi;
+static unsigned mmap_len = 0;
 
 static void gr_fb_clear(GGLSurface *fb) {
     if (fb && fb->data) {
@@ -60,10 +62,13 @@ static void gr_fb_clear(GGLSurface *fb) {
     }
 }
 
+#ifndef DEFAULT_PAGE_SIZE
+#  define DEFAULT_PAGE_SIZE 4096
+#endif
+
 static int get_framebuffer(GGLSurface *fb)
 {
     int fd;
-    struct fb_fix_screeninfo fi;
     void *bits;
 
     // init to prevent free of random address
@@ -87,7 +92,14 @@ static int get_framebuffer(GGLSurface *fb)
         return -1;
     }
 
-    bits = mmap(0, fi.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    /* adjust to be page-aligned */
+    unsigned adjust = fi.smem_len % DEFAULT_PAGE_SIZE;
+    mmap_len = fi.smem_len;
+    if (adjust) {
+        mmap_len += (DEFAULT_PAGE_SIZE - adjust);
+    }
+
+    bits = mmap(0, mmap_len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (bits == MAP_FAILED) {
         perror("failed to mmap framebuffer");
         close(fd);
@@ -116,25 +128,19 @@ static int get_framebuffer(GGLSurface *fb)
 }
 
 static int release_framebuffer(GGLSurface *fb) {
-    struct fb_fix_screeninfo fi;
     void *bits;
 
-    if (gr_fb_fd < 0)
-        return -1;
-
-    if (ioctl(gr_fb_fd, FBIOGET_FSCREENINFO, &fi) < 0) {
-        perror("failed to get fb0 info");
-        return -2;
-    }
+    if (mmap_len == 0)
+        return -3;
 
     bits = fb->data;
     if (bits == NULL)
-        return -3;
+        return -2;
 
     close(gr_fb_fd);
     gr_fb_fd = -1;
 
-    return munmap(bits, fi.smem_len);
+    return munmap(bits, mmap_len);
 }
 
 static void get_memory_surface(GGLSurface* ms) {
