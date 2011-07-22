@@ -16,19 +16,14 @@
 
 #include <stdlib.h>
 #include <unistd.h>
-
 #include <fcntl.h>
 #include <stdio.h>
-
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/types.h>
-
 #include <linux/fb.h>
 #include <linux/kd.h>
-
 #include <pixelflinger/pixelflinger.h>
-
 #include <png.h>
 
 #include "minui.h"
@@ -111,7 +106,7 @@ int res_create_surface(const char* name, gr_surface* pSurface) {
         goto exit;
     }
     unsigned char* pData = (unsigned char*) (surface + 1);
-    surface->version = sizeof(GGLSurface);
+    surface->version = sizeof(GGLSurface); //50.
     surface->width = width;
     surface->height = height;
     surface->stride = width; /* Yes, pixels, not bytes */
@@ -158,10 +153,8 @@ exit:
     if (fp != NULL) {
         fclose(fp);
     }
-    if (result < 0) {
-        if (surface) {
-            free(surface);
-        }
+    if (result < 0 && surface) {
+        free(surface);
     }
     return result;
 }
@@ -170,7 +163,20 @@ void res_free_surface(gr_surface* pSurface) {
     GGLSurface* surface;
     if (pSurface && *pSurface) {
         surface = *pSurface;
-        free(surface);
+
+#ifdef DEBUG_ALLOC
+        ui_print("\nsurface info:\n");
+        ui_print("  version = %d\n", surface->version);
+        ui_print("  width   = %d\n", surface->width);
+        ui_print("  height  = %d\n", surface->height);
+        ui_print("  data    = %x\n", (unsigned) surface->data);
+        ui_print("surface ptr      = %x\n", (unsigned) surface);
+        //ui_print("pSurface ptr     = %x\n", (unsigned) pSurface);
+#endif
+
+        //doesnt works :(
+        //free(surface);
+
         *pSurface=NULL;
     }
 }

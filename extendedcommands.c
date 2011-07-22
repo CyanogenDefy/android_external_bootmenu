@@ -29,6 +29,8 @@
 #include "minui/minui.h"
 #include "bootmenu_ui.h"
 
+#define DEBUG_ALLOC
+
 int
 show_menu_boot(void) {
 
@@ -36,6 +38,11 @@ show_menu_boot(void) {
   #define BOOT_2NDINIT    1
   #define BOOT_2NDBOOT    2
   #define BOOT_NORMAL     3
+
+  #define BOOT_TEST     4
+  #define BOOT_FBTEST   5
+  #define BOOT_EVTTEST  6
+  #define BOOT_PNGTEST  7
 
   #define ITEM_2NDINIT    "2nd-init"
   #define ITEM_2NDBOOT    "2nd-boot"
@@ -49,11 +56,17 @@ show_menu_boot(void) {
   };
   char** title_headers = prepend_title(headers);
 
-  char* items[6] =  {
+  char* items[10] =  {
         "  +Set Default: [" ITEM_2NDINIT "] -->",
         "  [" ITEM_2NDINIT "]",
         "  [" ITEM_2NDBOOT "]",
         "  [" ITEM_NORMAL "]",
+#ifdef DEBUG_ALLOC
+        "  [test all]",
+        "  [test fb]",
+        "  [test evt]",
+        "  [test png]",
+#endif
         "  --Go Back.",
         NULL
   };
@@ -77,25 +90,62 @@ show_menu_boot(void) {
 
       case BOOT_2NDINIT:
         free(title_headers);
+        led_alert("green", 1);
         status = snd_init(ENABLE);
+        led_alert("green", 0);
         if (!status) res = 1;
-        return res;
+        goto exit_loop;
 
       case BOOT_2NDBOOT:
         free(title_headers);
         status = snd_boot(ENABLE);
         if (!status) res = 1;
-        return res;
+        goto exit_loop;
 
       case BOOT_NORMAL:
         res = -1;
-        break;
+        goto exit_loop;
 
+#ifdef DEBUG_ALLOC
+
+      case BOOT_TEST:
+        led_alert("green", 1);
+        ui_final();
+        ui_init();
+        led_alert("green", 0);
+        res = 0;
+        goto exit_loop;
+
+      case BOOT_FBTEST:
+        led_alert("green", 1);
+        gr_fb_test();
+        led_alert("green", 0);
+        res = 0;
+        goto exit_loop;
+
+      case BOOT_EVTTEST:
+        led_alert("green", 1);
+        evt_exit();
+        evt_init();
+        led_alert("green", 0);
+        res = 0;
+        goto exit_loop;
+
+      case BOOT_PNGTEST:
+        led_alert("green", 1);
+        ui_free_bitmaps();
+        ui_create_bitmaps();
+        led_alert("green", 0);
+        res = 0;
+        goto exit_loop;
+#endif
       default:
-        free(title_headers);
-        return 0;
+        res = 0;
+        goto exit_loop;
     }
   }
+
+exit_loop:
 
   free(title_headers);
 

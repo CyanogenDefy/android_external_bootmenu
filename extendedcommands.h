@@ -66,9 +66,6 @@ int
 bootmode_write(const char* str);
 
 int
-led_alert(const char* color, int value);
-
-int
 bypass_sign(const char* mode);
 
 int

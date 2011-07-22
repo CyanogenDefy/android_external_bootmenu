@@ -98,4 +98,11 @@ enum {
   ENABLE
 };
 
+
+//turn on/off a led
+int led_alert(const char* color, int value);
+
+int  ui_create_bitmaps();
+void ui_free_bitmaps();
+
 #endif  // RECOVERY_COMMON_H

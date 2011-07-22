@@ -237,7 +237,6 @@ run_bootmenu(void) {
       ui_finish();
     }
 
-    led_alert("blue", DISABLE);
   }
   return EXIT_SUCCESS;
 }
