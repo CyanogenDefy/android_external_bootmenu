@@ -16,7 +16,7 @@
 #define BOARD_BOOTMODE_CONFIG_FILE "/cache/recovery/bootmode.conf"
 #endif
 
-#define DBG_LEVEL 1
+#define DBG_LEVEL 0
 
 int reboot_wrapper(const char* reason) {
 
@@ -29,10 +29,10 @@ int reboot_wrapper(const char* reason) {
 
 		reason = REBOOT_REASON_DEFAULT;
 
-		system("rm -rf '" BOARD_BOOTMODE_CONFIG_FILE "'");
+		system("rm -f '" BOARD_BOOTMODE_CONFIG_FILE "'");
 
 		#if (DBG_LEVEL)
-		printf("reboot: rm -rf " BOARD_BOOTMODE_CONFIG_FILE "\n");
+		printf("reboot: rm -f " BOARD_BOOTMODE_CONFIG_FILE "\n");
 		#endif
 
 	} else {
