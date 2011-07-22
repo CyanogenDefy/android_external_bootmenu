@@ -165,7 +165,7 @@ wait_key(int key) {
       result = INSTALL_ERROR;
     }
     else {
-      usleep(25000); //25ms
+      usleep(15000); //15ms
     }
   }
   evt_exit();
@@ -237,7 +237,6 @@ run_bootmenu(void) {
       ui_finish();
     }
 
-    led_alert("blue", DISABLE);
   }
   return EXIT_SUCCESS;
 }

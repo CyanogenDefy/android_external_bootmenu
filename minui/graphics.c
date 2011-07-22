@@ -16,21 +16,19 @@
 
 #include <stdlib.h>
 #include <unistd.h>
-
 #include <fcntl.h>
 #include <stdio.h>
-
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/types.h>
-
 #include <linux/fb.h>
 #include <linux/kd.h>
-
 #include <pixelflinger/pixelflinger.h>
 
 #include "font_10x18.h"
 #include "minui.h"
+
+#include "../common.h"
 
 typedef struct {
     GGLSurface texture;
@@ -128,10 +126,8 @@ static int get_framebuffer(GGLSurface *fb)
 }
 
 static int release_framebuffer(GGLSurface *fb) {
+    int ret;
     void *bits;
-
-    if (mmap_len == 0)
-        return -3;
 
     bits = fb->data;
     if (bits == NULL)
@@ -140,7 +136,30 @@ static int release_framebuffer(GGLSurface *fb) {
     close(gr_fb_fd);
     gr_fb_fd = -1;
 
-    return munmap(bits, mmap_len);
+    if (mmap_len == 0)
+        return -1;
+
+    ret = munmap(bits, mmap_len);
+
+    if (ret < 0)
+       led_alert("red", 1);
+
+    return ret;
+}
+
+int gr_fb_test(void)
+{
+
+    release_framebuffer(gr_framebuffer);
+
+    gr_fb_fd = get_framebuffer(gr_framebuffer);
+    if (gr_fb_fd < 0) {
+        led_alert("red", 1);
+        gr_exit();
+        return -1;
+    }
+
+    return 0;
 }
 
 static void get_memory_surface(GGLSurface* ms) {

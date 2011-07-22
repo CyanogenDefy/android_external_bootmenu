@@ -30,7 +30,7 @@
 #include "bootmenu_ui.h"
 
 #define MAX_COLS 96
-#define MAX_ROWS 32
+#define MAX_ROWS 40
 
 #define CHAR_WIDTH 10
 #define CHAR_HEIGHT 18
@@ -89,6 +89,7 @@ static pthread_mutex_t key_queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t key_queue_cond = PTHREAD_COND_INITIALIZER;
 static int key_queue[256], key_queue_len = 0;
 static volatile char key_pressed[KEY_MAX + 1];
+static int evt_enabled = 0;
 
 // Clear the screen and draw the currently selected background icon (if any).
 // Should only be called with gUpdateMutex locked.
@@ -307,6 +308,24 @@ static void *input_thread(void *cookie)
     return NULL;
 }
 
+int ui_create_bitmaps()
+{
+    int i, result=0;
+
+    for (i = 0; BITMAPS[i].name != NULL; ++i) {
+        result = res_create_surface(BITMAPS[i].name, BITMAPS[i].surface);
+        if (result < 0) {
+            if (result == -2) {
+                LOGI("Bitmap %s missing header\n", BITMAPS[i].name);
+            } else {
+                LOGE("Missing bitmap %s\n(Code %d)\n", BITMAPS[i].name, result);
+            }
+            *BITMAPS[i].surface = NULL;
+        }
+    }
+    return result;
+}
+
 void ui_init(void)
 {
     gr_init();
@@ -320,52 +339,56 @@ void ui_init(void)
     text_cols = gr_fb_width() / CHAR_WIDTH;
     if (text_cols > MAX_COLS - 1) text_cols = MAX_COLS - 1;
 
-    int i;
-    for (i = 0; BITMAPS[i].name != NULL; ++i) {
-        int result = res_create_surface(BITMAPS[i].name, BITMAPS[i].surface);
-        if (result < 0) {
-            if (result == -2) {
-                LOGI("Bitmap %s missing header\n", BITMAPS[i].name);
-            } else {
-                LOGE("Missing bitmap %s\n(Code %d)\n", BITMAPS[i].name, result);
-            }
-            *BITMAPS[i].surface = NULL;
-        }
-    }
+    ui_create_bitmaps();
 
     pthread_t t;
     pthread_create(&t, NULL, progress_thread, NULL);
+
     pthread_create(&t, NULL, input_thread, NULL);
+    evt_enabled = 1;
 }
+
+void ui_free_bitmaps(void)
+{
+    int i;
+
+    //free bitmaps
+    for (i = 0; BITMAPS[i].name != NULL; ++i) {
+        if (BITMAPS[i].surface != NULL) {
+
+            ui_print("free bitmap %d @ %x\n", i, (unsigned) BITMAPS[i].surface);
+
+            res_free_surface(BITMAPS[i].surface);
+        }
+    }
+}
+
 
 void evt_init(void)
 {
     ev_init();
 
-    pthread_t t;
-    pthread_create(&t, NULL, input_thread, NULL);
+    if (!evt_enabled) {
+       pthread_t t;
+       pthread_create(&t, NULL, input_thread, NULL);
+       evt_enabled = 1;
+    }
 }
 
 void evt_exit(void)
 {
     ev_exit();
+    evt_enabled = 0;
 }
 
 void ui_final(void)
 {
-    int i;
-
-    ev_exit();
+    evt_exit();
 
     ui_show_text(0);
     gr_exit();
 
-    //free bitmaps
-    for (i = 0; BITMAPS[i].name != NULL; ++i) {
-        if (BITMAPS[i].surface != NULL) {
-            res_free_surface(BITMAPS[i].surface);
-        }
-    }
+    //ui_free_bitmaps();
 }
 
 void ui_set_background(int icon)

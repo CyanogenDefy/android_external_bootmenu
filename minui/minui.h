@@ -55,4 +55,6 @@ int ev_get(struct input_event *ev, unsigned dont_wait);
 int res_create_surface(const char* name, gr_surface* pSurface);
 void res_free_surface(gr_surface* pSurface);
 
+int gr_fb_test(void);
+
 #endif
