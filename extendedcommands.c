@@ -21,6 +21,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/reboot.h>
 #include <unistd.h>
 
 #include "common.h"
@@ -29,7 +30,7 @@
 #include "minui/minui.h"
 #include "bootmenu_ui.h"
 
-#define DEBUG_ALLOC
+//#define DEBUG_ALLOC
 
 int
 show_menu_boot(void) {
@@ -89,21 +90,26 @@ show_menu_boot(void) {
         break;
 
       case BOOT_2NDINIT:
-        free(title_headers);
-        led_alert("green", 1);
-        status = snd_init(ENABLE);
-        led_alert("green", 0);
-        if (!status) res = 1;
+        //free(title_headers);
+        //status = snd_init(ENABLE);
+        next_bootmode_write("2nd-init");
+        sync();
+        reboot(RB_AUTOBOOT);
         goto exit_loop;
 
       case BOOT_2NDBOOT:
-        free(title_headers);
-        status = snd_boot(ENABLE);
-        if (!status) res = 1;
+        //free(title_headers);
+        //status = snd_boot(ENABLE);
+        next_bootmode_write("2nd-boot");
+        sync();
+        reboot(RB_AUTOBOOT);
         goto exit_loop;
 
       case BOOT_NORMAL:
         res = -1;
+        next_bootmode_write("normal");
+        sync();
+        reboot(RB_AUTOBOOT);
         goto exit_loop;
 
 #ifdef DEBUG_ALLOC
@@ -540,6 +546,20 @@ bootmode_write(const char* str) {
     fclose(f);
     return 0;
   }
+  return 1;
+}
+
+int
+next_bootmode_write(const char* str) {
+  FILE* f = fopen(FILE_BOOTMODE, "w");
+
+  if (f != NULL) {
+    fprintf(f, "%s", str);
+    fclose(f);
+    return 0;
+  }
+  ui_print("next boot set to %s\n\nRebooting...\n", str);
+
   return 1;
 }
 

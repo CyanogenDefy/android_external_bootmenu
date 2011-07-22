@@ -16,21 +16,19 @@
 
 #include <stdlib.h>
 #include <unistd.h>
-
 #include <fcntl.h>
 #include <stdio.h>
-
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/types.h>
-
 #include <linux/fb.h>
 #include <linux/kd.h>
-
 #include <pixelflinger/pixelflinger.h>
 
 #include "font_10x18.h"
 #include "minui.h"
+
+#include "../common.h"
 
 typedef struct {
     GGLSurface texture;

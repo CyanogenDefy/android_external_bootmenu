@@ -66,6 +66,9 @@ int
 bootmode_write(const char* str);
 
 int
+next_bootmode_write(const char* str);
+
+int
 bypass_sign(const char* mode);
 
 int
