@@ -1,6 +1,8 @@
 //Created by Skrilax_CZ (skrilax@gmail.com),
 //based on work done by Pradeep Padala (p_padala@yahoo.com)
 
+//enhanced by Epsylon3 for XDA CyanogenDefy
+
 #include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -12,6 +14,9 @@
 #include <errno.h>
 
 #include <sys/linux-syscalls.h>
+
+#define INIT_COMPAT 179
+#define VERSION "v1.0.0-179"
 
 union u
 {
@@ -173,6 +178,9 @@ int main(int argc, char** argv)
 	char buff[512];
 	char init_env[0x1C0];
 
+        printf("2nd-init " VERSION "\n");
+        printf(" by CyanogenDefy team, 2011\n");
+
 	//read the enviromental variables of the init
 	FILE* f = fopen("/proc/1/environ", "r");
 
@@ -262,13 +270,22 @@ int main(int argc, char** argv)
 
 	printf("execve located on: 0x%08lX.\n", execve_address);
 
-// for 177-5
-//	long injected_code_address = execve_address + 0x1000; //BLX sub_wait4 ? : we need to find a reference
-// for 179-2, execve = CFA0
-	long injected_code_address = execve_address + 0x0FE0;
+// 3 different versions, for 3 different verison of /init (present in boot.smg)
+#if (INIT_COMPAT == 177)
+// for NORDIC 177-5 (also compatible with RTGB 343-11)
+	long injected_code_address = execve_address + 0x1000; //BLX sub_wait4 ? : we need to find a reference
+#endif
+#if (INIT_COMPAT == 179)
+// for CEE 179-2, execve = CFA0
+//	long injected_code_address = execve_address + 0x0FE0; //BLX @ DF80
+// for SEA 36-17, execve = CFA0 (also compatible with 179-2)
+	long injected_code_address = execve_address + 0x0FE0 - 20; //start of bloc (BLX @ DF80)
+#endif
+#if (INIT_COMPAT == 234)
 // for 234-134, execve = 81A0, injection at 0x1089C
-//	long injected_code_address = execve_address + 0x86FC;
-	
+	long injected_code_address = execve_address + 0x86FC;
+#endif
+
 	printf("Address for the injection: 0x%08lX.\n", injected_code_address);
 
 //	long nr_wait4 = find_syscall(init_image, image_size, __NR_wait4);
@@ -342,6 +359,8 @@ int main(int argc, char** argv)
 
 	while (*iter)
 	{
+		printf(" env %x: %s\n", w, iter);
+
 		//an env. var is found, write its address and copy it
 		long current_envp_string_address = injected_code_address + w;
 
