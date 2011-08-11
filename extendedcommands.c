@@ -32,6 +32,11 @@
 
 //#define DEBUG_ALLOC
 
+#define ITEM_2NDINIT    "2nd-init"
+#define ITEM_2NDBOOT    "2nd-boot"
+#define ITEM_NORMAL     "Stock"
+#define ITEM_2NDADB     "adb-init"
+
 int
 show_menu_boot(void) {
 
@@ -39,15 +44,12 @@ show_menu_boot(void) {
   #define BOOT_2NDINIT    1
   #define BOOT_2NDBOOT    2
   #define BOOT_NORMAL     3
+  #define BOOT_ADBINIT    4
 
-  #define BOOT_TEST     4
-  #define BOOT_FBTEST   5
-  #define BOOT_EVTTEST  6
-  #define BOOT_PNGTEST  7
-
-  #define ITEM_2NDINIT    "2nd-init"
-  #define ITEM_2NDBOOT    "2nd-boot"
-  #define ITEM_NORMAL     "Stock"
+  #define BOOT_TEST     5
+  #define BOOT_FBTEST   6
+  #define BOOT_EVTTEST  7
+  #define BOOT_PNGTEST  8
 
   int status, res = 0;
   const char* headers[] = {
@@ -57,11 +59,12 @@ show_menu_boot(void) {
   };
   char** title_headers = prepend_title(headers);
 
-  char* items[10] =  {
+  char* items[11] =  {
         "  +Set Default: [" ITEM_2NDINIT "] -->",
         "  [" ITEM_2NDINIT "]",
         "  [" ITEM_2NDBOOT "]",
         "  [" ITEM_NORMAL "]",
+        "  [" ITEM_2NDADB "]",
 #ifdef DEBUG_ALLOC
         "  [test all]",
         "  [test fb]",
@@ -90,8 +93,6 @@ show_menu_boot(void) {
         break;
 
       case BOOT_2NDINIT:
-        //free(title_headers);
-        //status = snd_init(ENABLE);
         next_bootmode_write("2nd-init");
         sync();
         reboot(RB_AUTOBOOT);
@@ -111,6 +112,15 @@ show_menu_boot(void) {
         sync();
         reboot(RB_AUTOBOOT);
         goto exit_loop;
+
+      case BOOT_ADBINIT:
+        //2nd-init with adb enabled for
+        // direct boot (overlay bug)
+        free(title_headers);
+        exec_script(FILE_ADBD, ENABLE);
+        sync();
+        status = snd_init(ENABLE);
+        return (status == 0);
 
 #ifdef DEBUG_ALLOC
 
@@ -507,11 +517,11 @@ get_bootmode(void) {
     //unlink(FILE_BOOTMODE);
     exec_script(FILE_BOOTMODE_CLEAN,DISABLE);
 
-    if (0 == strcmp(mode, "normal"))
+    if (0 == strcmp(mode, ITEM_NORMAL))
       return MODE_NORMAL;
-    else if (0 == strcmp(mode, "2nd-init"))
+    else if (0 == strcmp(mode, ITEM_2NDINIT))
       return MODE_2NDINIT;
-    else if (0 == strcmp(mode, "2nd-boot"))
+    else if (0 == strcmp(mode, ITEM_2NDBOOT))
       return MODE_2NDBOOT;
     else if (0 == strcmp(mode, "bootmenu"))
       return MODE_BOOTMENU;
@@ -525,12 +535,14 @@ get_bootmode(void) {
     fscanf(f, "%s", mode);
     fclose(f);
 
-    if (0 == strcmp(mode, "normal"))
+    if (0 == strcmp(mode, ITEM_NORMAL))
       return MODE_NORMAL;
-    else if (0 == strcmp(mode, "2nd-init"))
+    else if (0 == strcmp(mode, ITEM_2NDINIT))
       return MODE_2NDINIT;
-    else if (0 == strcmp(mode, "2nd-boot"))
+    else if (0 == strcmp(mode, ITEM_2NDBOOT))
       return MODE_2NDBOOT;
+    else if (0 == strcmp(mode, ITEM_2NDADB))
+      return MODE_2NDADB;
     else
       return MODE_BOOTMENU;
   }

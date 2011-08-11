@@ -3,7 +3,8 @@ enum {
   MODE_2NDBOOT,
   MODE_NORMAL,
   MODE_BOOTMENU,
-  MODE_RECOVERY
+  MODE_RECOVERY,
+  MODE_2NDADB,
 };
 
 static const char *FILE_2NDINIT   = "/system/bootmenu/script/2nd-init.sh";
