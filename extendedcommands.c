@@ -219,10 +219,9 @@ show_menu_system(void) {
         status = exec_script(FILE_UNINSTALL, ENABLE);
         ui_print("Done..\n");
         ui_print("******** Plz reboot now.. ********\n");
-        ui_print("******** Plz reboot now.. ********\n");
         break;
       default:
-        break;
+        return 0;
     }
     select = chosen_item;
   }
@@ -237,6 +236,7 @@ show_menu_tools(void) {
 
 #define TOOL_ADB     0
 #define TOOL_USB     1
+#define TOOL_CDROM   2
 
   int status;
 
@@ -250,6 +250,7 @@ show_menu_tools(void) {
   char* items[] =  {
         "  [ADB Daemon]",
         "  [USB Mass Storage]",
+        "  [CDROM drivers]",
         "  --Go Back.",
         NULL
   };
@@ -265,7 +266,14 @@ show_menu_tools(void) {
 
     case TOOL_USB:
       ui_print("USB Mass Storage....");
-      mount_usb_storage();
+      //mount_usb_storage();
+      status = exec_script(FILE_SDCARD, ENABLE);
+      ui_print("Done..\n");
+      break;
+
+    case TOOL_CDROM:
+      ui_print("USB CDROM Drivers....");
+      status = exec_script(FILE_CDROM, ENABLE);
       ui_print("Done..\n");
       break;
 
@@ -287,6 +295,7 @@ show_menu_recovery(void) {
 
   int status, res=0;
   char** args;
+  FILE* f;
 
   const char* headers[] = {
         " # Recovery -->",
@@ -323,6 +332,12 @@ show_menu_recovery(void) {
     case RECOVERY_STOCK:
       ui_print("Rebooting to Stock Recovery..\n");
 
+      f = fopen("/data/.recovery_mode", "w");
+      if (f != NULL) {
+        fprintf(f, "%s", "1");
+        fclose(f);
+      }
+
       args = malloc(sizeof(char*) * 3);
       args[0] = (char *) FILE_STOCKRECOVERY;
       args[1] = "recovery";
@@ -331,7 +346,7 @@ show_menu_recovery(void) {
       sync();
       status = exec_and_wait(args);
       if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-        LOGE("Error in %s\n(Status %d)\n", FILE_STOCKRECOVERY, WEXITSTATUS(status));
+        ui_printf("Error in %s\n(Status %d)\n", FILE_STOCKRECOVERY, WEXITSTATUS(status));
       }
       res = 2;
       break;
@@ -344,10 +359,14 @@ show_menu_recovery(void) {
   return res;
 }
 
+#ifndef BOARD_UMS_LUNFILE
+#define BOARD_UMS_LUNFILE  "/sys/devices/platform/usb_mass_storage/lun0/file"
+#endif
+
 int
 mount_usb_storage(void) {
 
-  char usb_storage[] = "/sys/devices/platform/usb_mass_storage/lun0/file";
+  char usb_storage[] = BOARD_UMS_LUNFILE;
   char part[] = "/dev/block/mmcblk0p1";
 
   FILE* f = fopen(usb_storage, "w");
@@ -356,8 +375,10 @@ mount_usb_storage(void) {
     fprintf(f, "%s", part);
     fclose(f);
     return 0;
+  } else {
+    ui_printf("Unable to write to usb_mass_storage lun file (%s)", strerror(errno));
   }
-  return 0;
+  return 1;
 }
 
 int
@@ -474,7 +495,7 @@ show_config_bootmode(void) {
       continue;
     }
     else {
-      ui_print("Fail Setup Default Boot.\n");
+      ui_print("Failed to setup default boot mode.\n");
       break;
     }
   }
@@ -570,7 +591,7 @@ next_bootmode_write(const char* str) {
     fclose(f);
     return 0;
   }
-  ui_print("next boot set to %s\n\nRebooting...\n", str);
+  ui_print("Next boot mode set to %s\n\nRebooting...\n", str);
 
   return 1;
 }
