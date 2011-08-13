@@ -237,6 +237,7 @@ show_menu_tools(void) {
 #define TOOL_ADB     0
 #define TOOL_USB     1
 #define TOOL_CDROM   2
+#define TOOL_NAND    3
 
   int status;
 
@@ -250,7 +251,8 @@ show_menu_tools(void) {
   char* items[] =  {
         "  [ADB Daemon]",
         "  [USB Mass Storage]",
-        "  [CDROM drivers]",
+        "  [USB Drivers]",
+        "  [USB NAND]",
         "  --Go Back.",
         NULL
   };
@@ -272,8 +274,14 @@ show_menu_tools(void) {
       break;
 
     case TOOL_CDROM:
-      ui_print("USB CDROM Drivers....");
+      ui_print("USB Drivers....");
       status = exec_script(FILE_CDROM, ENABLE);
+      ui_print("Done..\n");
+      break;
+
+    case TOOL_NAND:
+      ui_print("USB System Nand....");
+      status = exec_script(FILE_NAND, ENABLE);
       ui_print("Done..\n");
       break;
 
@@ -338,6 +346,8 @@ show_menu_recovery(void) {
         fclose(f);
       }
 
+      __reboot(LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2, LINUX_REBOOT_CMD_RESTART2, "recovery");
+/*
       args = malloc(sizeof(char*) * 3);
       args[0] = (char *) FILE_STOCKRECOVERY;
       args[1] = "recovery";
@@ -350,6 +360,7 @@ show_menu_recovery(void) {
       }
       res = 2;
       break;
+*/
 
     default:
       break;
@@ -376,7 +387,7 @@ mount_usb_storage(void) {
     fclose(f);
     return 0;
   } else {
-    ui_printf("Unable to write to usb_mass_storage lun file (%s)", strerror(errno));
+    ui_print("Unable to write to usb_mass_storage lun file (%s)", strerror(errno));
   }
   return 1;
 }
