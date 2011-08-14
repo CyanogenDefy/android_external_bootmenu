@@ -12,7 +12,8 @@ static const char *FILE_2NDBOOT   = "/system/bootmenu/script/2nd-boot.sh";
 static const char *FILE_ADBD      = "/system/bootmenu/script/adbd.sh";
 static const char *FILE_SDCARD    = "/system/bootmenu/script/sdcard.sh";
 static const char *FILE_CDROM     = "/system/bootmenu/script/cdrom.sh";
-static const char *FILE_NAND      = "/system/bootmenu/script/nand.sh";
+static const char *FILE_SYSTEM    = "/system/bootmenu/script/system.sh";
+static const char *FILE_DATA      = "/system/bootmenu/script/data.sh";
 static const char *FILE_OVERCLOCK = "/system/bootmenu/script/overclock.sh";
 
 static const char *FILE_CUSTOMRECOVERY  = "/system/bootmenu/script/recovery.sh";

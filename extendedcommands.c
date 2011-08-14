@@ -237,7 +237,8 @@ show_menu_tools(void) {
 #define TOOL_ADB     0
 #define TOOL_USB     1
 #define TOOL_CDROM   2
-#define TOOL_NAND    3
+#define TOOL_SYSTEM  3
+#define TOOL_DATA    4
 
   int status;
 
@@ -252,7 +253,8 @@ show_menu_tools(void) {
         "  [ADB Daemon]",
         "  [USB Mass Storage]",
         "  [USB Drivers]",
-        "  [USB NAND]",
+        "  [USB Mount /system]",
+        "  [USB Mount /data]",
         "  --Go Back.",
         NULL
   };
@@ -279,9 +281,15 @@ show_menu_tools(void) {
       ui_print("Done..\n");
       break;
 
-    case TOOL_NAND:
-      ui_print("USB System Nand....");
-      status = exec_script(FILE_NAND, ENABLE);
+    case TOOL_SYSTEM:
+      ui_print("Sharing System Partition....");
+      status = exec_script(FILE_SYSTEM, ENABLE);
+      ui_print("Done..\n");
+      break;
+
+    case TOOL_DATA:
+      ui_print("Sharing Data Partition....");
+      status = exec_script(FILE_DATA, ENABLE);
       ui_print("Done..\n");
       break;
 
