@@ -26,7 +26,7 @@ static const char *FILE_OVERCLOCK_CONF  = "/system/bootmenu/config/overclock.con
 static const char *FILE_BYPASS          = "/data/.bootmenu_bypass";
 static const char *FILE_STOCKRECOVERY   = "/system/bin/reboot";
 
-#if ENABLE_MENU_SYSTEM
+#if FULL_VERSION
 
 static const char *FILE_ROOT = "/system/bootmenu/script/unroot.sh";
 static const char *FILE_UNINSTALL = "/system/bootmenu/script/uninstall.sh";
@@ -34,7 +34,7 @@ static const char *FILE_UNINSTALL = "/system/bootmenu/script/uninstall.sh";
 int
 show_menu_system(void);
 
-#endif //ENABLE_MENU_SYSTEM
+#endif //FULL_VERSION
 
 int
 show_menu_boot(void);

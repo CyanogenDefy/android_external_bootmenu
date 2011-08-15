@@ -126,7 +126,7 @@ prompt_and_wait() {
     switch (chosen_item) {
       case ITEM_BOOT:
         if (show_menu_boot()) return; else break;
-#if ENABLE_MENU_SYSTEM
+#if FULL_VERSION
       case ITEM_SYSTEM:
         if (show_menu_system()) return; else break;
 #else

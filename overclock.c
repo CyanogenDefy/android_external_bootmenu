@@ -181,7 +181,7 @@ menu_overclock_status(int intl_value) {
   return mode;
 }
 
-#if ENABLE_MENU_SYSTEM
+#if FULL_VERSION
 # define MENU_SYSTEM " System -->"
 # define MENU_OVERCLOCK " Overclock -->"
 #else

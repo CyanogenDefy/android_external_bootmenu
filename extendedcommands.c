@@ -35,7 +35,7 @@
 #define ITEM_2NDINIT    "2nd-init"
 #define ITEM_2NDBOOT    "2nd-boot"
 #define ITEM_NORMAL     "Stock"
-#define ITEM_2NDADB     "adb-init"
+#define ITEM_2NDADB     "2nd-init + adb"
 
 int
 show_menu_boot(void) {
@@ -168,7 +168,7 @@ exit_loop:
   return res;
 }
 
-#if ENABLE_MENU_SYSTEM
+#if FULL_VERSION
 int
 show_menu_system(void) {
 
@@ -229,7 +229,7 @@ show_menu_system(void) {
   free(title_headers);
   return 0;
 }
-#endif //ENABLE_MENU_SYSTEM
+#endif //#if FULL_VERSION
 
 int
 show_menu_tools(void) {
@@ -354,6 +354,7 @@ show_menu_recovery(void) {
         fclose(f);
       }
 
+      sync();
       __reboot(LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2, LINUX_REBOOT_CMD_RESTART2, "recovery");
 /*
       args = malloc(sizeof(char*) * 3);
@@ -481,7 +482,7 @@ show_config_bootmode(void) {
   };
   char** title_headers = prepend_title(headers);
 
-  char* items[4][2] = {
+  char* items[5][2] = {
         { "   [" ITEM_2NDINIT "]", "  *[" ITEM_2NDINIT "]" },
         { "   [" ITEM_2NDBOOT "]", "  *[" ITEM_2NDBOOT "]" },
         { "   [" ITEM_NORMAL "]", "  *[" ITEM_NORMAL "]" },
@@ -557,11 +558,11 @@ get_bootmode(void) {
     //unlink(FILE_BOOTMODE);
     exec_script(FILE_BOOTMODE_CLEAN,DISABLE);
 
-    if (0 == strcmp(mode, ITEM_NORMAL))
+    if (0 == strcmp(mode, "normal"))
       return MODE_NORMAL;
-    else if (0 == strcmp(mode, ITEM_2NDINIT))
+    else if (0 == strcmp(mode, "2nd-init"))
       return MODE_2NDINIT;
-    else if (0 == strcmp(mode, ITEM_2NDBOOT))
+    else if (0 == strcmp(mode, "2nd-boot"))
       return MODE_2NDBOOT;
     else if (0 == strcmp(mode, "bootmenu"))
       return MODE_BOOTMENU;
