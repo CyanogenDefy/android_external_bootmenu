@@ -32,6 +32,11 @@
 
 //#define DEBUG_ALLOC
 
+#define ITEM_2NDINIT    "2nd-init"
+#define ITEM_2NDBOOT    "2nd-boot"
+#define ITEM_NORMAL     "Stock"
+#define ITEM_2NDADB     "2nd-init + adb"
+
 int
 show_menu_boot(void) {
 
@@ -39,15 +44,12 @@ show_menu_boot(void) {
   #define BOOT_2NDINIT    1
   #define BOOT_2NDBOOT    2
   #define BOOT_NORMAL     3
+  #define BOOT_ADBINIT    4
 
-  #define BOOT_TEST     4
-  #define BOOT_FBTEST   5
-  #define BOOT_EVTTEST  6
-  #define BOOT_PNGTEST  7
-
-  #define ITEM_2NDINIT    "2nd-init"
-  #define ITEM_2NDBOOT    "2nd-boot"
-  #define ITEM_NORMAL     "Stock"
+  #define BOOT_TEST     5
+  #define BOOT_FBTEST   6
+  #define BOOT_EVTTEST  7
+  #define BOOT_PNGTEST  8
 
   int status, res = 0;
   const char* headers[] = {
@@ -57,11 +59,12 @@ show_menu_boot(void) {
   };
   char** title_headers = prepend_title(headers);
 
-  char* items[10] =  {
+  char* items[11] =  {
         "  +Set Default: [" ITEM_2NDINIT "] -->",
         "  [" ITEM_2NDINIT "]",
         "  [" ITEM_2NDBOOT "]",
         "  [" ITEM_NORMAL "]",
+        "  [" ITEM_2NDADB "]",
 #ifdef DEBUG_ALLOC
         "  [test all]",
         "  [test fb]",
@@ -90,8 +93,6 @@ show_menu_boot(void) {
         break;
 
       case BOOT_2NDINIT:
-        //free(title_headers);
-        //status = snd_init(ENABLE);
         next_bootmode_write("2nd-init");
         sync();
         reboot(RB_AUTOBOOT);
@@ -111,6 +112,15 @@ show_menu_boot(void) {
         sync();
         reboot(RB_AUTOBOOT);
         goto exit_loop;
+
+      case BOOT_ADBINIT:
+        //2nd-init with adb enabled for
+        // direct boot (overlay bug)
+        free(title_headers);
+        exec_script(FILE_ADBD, ENABLE);
+        sync();
+        status = snd_init(ENABLE);
+        return (status == 0);
 
 #ifdef DEBUG_ALLOC
 
@@ -158,7 +168,7 @@ exit_loop:
   return res;
 }
 
-#if ENABLE_MENU_SYSTEM
+#if FULL_VERSION
 int
 show_menu_system(void) {
 
@@ -209,10 +219,9 @@ show_menu_system(void) {
         status = exec_script(FILE_UNINSTALL, ENABLE);
         ui_print("Done..\n");
         ui_print("******** Plz reboot now.. ********\n");
-        ui_print("******** Plz reboot now.. ********\n");
         break;
       default:
-        break;
+        return 0;
     }
     select = chosen_item;
   }
@@ -220,13 +229,16 @@ show_menu_system(void) {
   free(title_headers);
   return 0;
 }
-#endif //ENABLE_MENU_SYSTEM
+#endif //#if FULL_VERSION
 
 int
 show_menu_tools(void) {
 
 #define TOOL_ADB     0
 #define TOOL_USB     1
+#define TOOL_CDROM   2
+#define TOOL_SYSTEM  3
+#define TOOL_DATA    4
 
   int status;
 
@@ -240,6 +252,9 @@ show_menu_tools(void) {
   char* items[] =  {
         "  [ADB Daemon]",
         "  [USB Mass Storage]",
+        "  [USB Drivers]",
+        "  [USB Mount /system]",
+        "  [USB Mount /data]",
         "  --Go Back.",
         NULL
   };
@@ -255,7 +270,26 @@ show_menu_tools(void) {
 
     case TOOL_USB:
       ui_print("USB Mass Storage....");
-      mount_usb_storage();
+      //mount_usb_storage();
+      status = exec_script(FILE_SDCARD, ENABLE);
+      ui_print("Done..\n");
+      break;
+
+    case TOOL_CDROM:
+      ui_print("USB Drivers....");
+      status = exec_script(FILE_CDROM, ENABLE);
+      ui_print("Done..\n");
+      break;
+
+    case TOOL_SYSTEM:
+      ui_print("Sharing System Partition....");
+      status = exec_script(FILE_SYSTEM, ENABLE);
+      ui_print("Done..\n");
+      break;
+
+    case TOOL_DATA:
+      ui_print("Sharing Data Partition....");
+      status = exec_script(FILE_DATA, ENABLE);
       ui_print("Done..\n");
       break;
 
@@ -277,6 +311,7 @@ show_menu_recovery(void) {
 
   int status, res=0;
   char** args;
+  FILE* f;
 
   const char* headers[] = {
         " # Recovery -->",
@@ -313,6 +348,16 @@ show_menu_recovery(void) {
     case RECOVERY_STOCK:
       ui_print("Rebooting to Stock Recovery..\n");
 
+      //optional
+      f = fopen("/data/.recovery_mode", "w");
+      if (f != NULL) {
+        fprintf(f, "%s", "1");
+        fclose(f);
+      }
+
+      sync();
+      __reboot(LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2, LINUX_REBOOT_CMD_RESTART2, "recovery");
+/*
       args = malloc(sizeof(char*) * 3);
       args[0] = (char *) FILE_STOCKRECOVERY;
       args[1] = "recovery";
@@ -325,6 +370,7 @@ show_menu_recovery(void) {
       }
       res = 2;
       break;
+*/
 
     default:
       break;
@@ -334,10 +380,16 @@ show_menu_recovery(void) {
   return res;
 }
 
+/* made in sdcard.sh
+
+#ifndef BOARD_UMS_LUNFILE
+#define BOARD_UMS_LUNFILE  "/sys/devices/platform/usb_mass_storage/lun0/file"
+#endif
+
 int
 mount_usb_storage(void) {
 
-  char usb_storage[] = "/sys/devices/platform/usb_mass_storage/lun0/file";
+  char usb_storage[] = BOARD_UMS_LUNFILE;
   char part[] = "/dev/block/mmcblk0p1";
 
   FILE* f = fopen(usb_storage, "w");
@@ -346,9 +398,13 @@ mount_usb_storage(void) {
     fprintf(f, "%s", part);
     fclose(f);
     return 0;
+  } else {
+    ui_print("Unable to write to usb_mass_storage lun file (%s)", strerror(errno));
   }
-  return 0;
+  return 1;
 }
+
+*/
 
 int
 snd_init(int ui) {
@@ -464,7 +520,7 @@ show_config_bootmode(void) {
       continue;
     }
     else {
-      ui_print("Fail Setup Default Boot.\n");
+      ui_print("Failed to setup default boot mode.\n");
       break;
     }
   }
@@ -525,12 +581,14 @@ get_bootmode(void) {
     fscanf(f, "%s", mode);
     fclose(f);
 
-    if (0 == strcmp(mode, "normal"))
+    if (0 == strcmp(mode, ITEM_NORMAL))
       return MODE_NORMAL;
-    else if (0 == strcmp(mode, "2nd-init"))
+    else if (0 == strcmp(mode, ITEM_2NDINIT))
       return MODE_2NDINIT;
-    else if (0 == strcmp(mode, "2nd-boot"))
+    else if (0 == strcmp(mode, ITEM_2NDBOOT))
       return MODE_2NDBOOT;
+    else if (0 == strcmp(mode, ITEM_2NDADB))
+      return MODE_2NDADB;
     else
       return MODE_BOOTMENU;
   }
@@ -558,7 +616,7 @@ next_bootmode_write(const char* str) {
     fclose(f);
     return 0;
   }
-  ui_print("next boot set to %s\n\nRebooting...\n", str);
+  ui_print("Next boot mode set to %s\n\nRebooting...\n", str);
 
   return 1;
 }

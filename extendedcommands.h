@@ -3,12 +3,17 @@ enum {
   MODE_2NDBOOT,
   MODE_NORMAL,
   MODE_BOOTMENU,
-  MODE_RECOVERY
+  MODE_RECOVERY,
+  MODE_2NDADB,
 };
 
 static const char *FILE_2NDINIT   = "/system/bootmenu/script/2nd-init.sh";
 static const char *FILE_2NDBOOT   = "/system/bootmenu/script/2nd-boot.sh";
 static const char *FILE_ADBD      = "/system/bootmenu/script/adbd.sh";
+static const char *FILE_SDCARD    = "/system/bootmenu/script/sdcard.sh";
+static const char *FILE_CDROM     = "/system/bootmenu/script/cdrom.sh";
+static const char *FILE_SYSTEM    = "/system/bootmenu/script/system.sh";
+static const char *FILE_DATA      = "/system/bootmenu/script/data.sh";
 static const char *FILE_OVERCLOCK = "/system/bootmenu/script/overclock.sh";
 
 static const char *FILE_CUSTOMRECOVERY  = "/system/bootmenu/script/recovery.sh";
@@ -21,7 +26,7 @@ static const char *FILE_OVERCLOCK_CONF  = "/system/bootmenu/config/overclock.con
 static const char *FILE_BYPASS          = "/data/.bootmenu_bypass";
 static const char *FILE_STOCKRECOVERY   = "/system/bin/reboot";
 
-#if ENABLE_MENU_SYSTEM
+#if FULL_VERSION
 
 static const char *FILE_ROOT = "/system/bootmenu/script/unroot.sh";
 static const char *FILE_UNINSTALL = "/system/bootmenu/script/uninstall.sh";
@@ -29,7 +34,7 @@ static const char *FILE_UNINSTALL = "/system/bootmenu/script/uninstall.sh";
 int
 show_menu_system(void);
 
-#endif //ENABLE_MENU_SYSTEM
+#endif //FULL_VERSION
 
 int
 show_menu_boot(void);
@@ -44,8 +49,8 @@ show_menu_tools(void);
 int
 show_menu_recovery(void);
 
-int
-mount_usb_storage(void);
+//int 
+//mount_usb_storage(void);
 
 int
 snd_init(int ui);

@@ -1,46 +1,77 @@
+ifeq ($(TARGET_ARCH),arm)
 ifneq ($(TARGET_SIMULATOR),true)
- ifeq ($(TARGET_ARCH),arm)
 
- ifeq ($(BOARD_USES_BOOTMENU),true)
-
+################################
 
 LOCAL_PATH := $(call my-dir)
-
-include $(CLEAR_VARS)
-
-LOCAL_MODULE := bootmenu
-LOCAL_MODULE_TAGS := eng
-
 commands_bootmenu_local_path := $(LOCAL_PATH)
 
-LOCAL_SRC_FILES := \
+bootmenu_sources := \
     extendedcommands.c \
     overclock.c \
     bootmenu.c \
     default_bootmenu_ui.c \
     ui.c \
 
-LOCAL_FORCE_STATIC_EXECUTABLE := true
+include $(CLEAR_VARS)
 
-BOOTMENU_VERSION := 1.0.0
+BOOTMENU_VERSION:=1.0.2
 
-LOCAL_CFLAGS += -DBOOTMENU_VERSION="${BOOTMENU_VERSION}-defy" -DENABLE_MENU_SYSTEM=0
+ifeq ($(BOARD_USES_BOOTMENU),true)
+
+LOCAL_MODULE := bootmenu
+LOCAL_MODULE_TAGS := eng
+
+LOCAL_SRC_FILES := $(bootmenu_sources)
+
+BOOTMENU_SUFFIX :=
+
+LOCAL_CFLAGS += -DBOOTMENU_VERSION="${BOOTMENU_VERSION}${BOOTMENU_SUFFIX}" -DFULL_VERSION=0
 
 LOCAL_STATIC_LIBRARIES :=
 LOCAL_STATIC_LIBRARIES += libminui_bm libpixelflinger_static libpng libz
 LOCAL_STATIC_LIBRARIES += libstdc++ libc libcutils 
 
-ifeq ($(TARGET_PRODUCT),cyanogen_jordan)
-    LOCAL_MODULE_PATH := $(PRODUCT_OUT)/system/bin
-endif
+LOCAL_FORCE_STATIC_EXECUTABLE := true
+
+LOCAL_MODULE_PATH := $(PRODUCT_OUT)/system/bin
+
 include $(BUILD_EXECUTABLE)
 
+include $(call all-makefiles-under,$(commands_bootmenu_local_path))
 
-include $(call all-makefiles-under,$(LOCAL_PATH))
+include $(CLEAR_VARS)
+
+endif # BOARD_USES_BOOTMENU
 
 
- endif # BOARD_USES_BOOTMENU
+############################
+# Standalone version
 
- endif # TARGET_ARCH arm
-endif  # !TARGET_SIMULATOR
+LOCAL_PATH := $(commands_bootmenu_local_path)
 
+LOCAL_MODULE := Bootmenu
+LOCAL_MODULE_TAGS := optional
+
+LOCAL_SRC_FILES := $(bootmenu_sources)
+
+BOOTMENU_SUFFIX :=-full
+
+LOCAL_CFLAGS := -DBOOTMENU_VERSION="${BOOTMENU_VERSION}${BOOTMENU_SUFFIX}" -DFULL_VERSION=1
+
+LOCAL_STATIC_LIBRARIES :=
+LOCAL_STATIC_LIBRARIES += libminui_bm libpixelflinger_static libpng libz
+LOCAL_STATIC_LIBRARIES += libstdc++ libc libcutils
+
+LOCAL_FORCE_STATIC_EXECUTABLE := true
+
+LOCAL_MODULE_PATH := $(PRODUCT_OUT)/system/bootmenu/binary
+
+include $(call all-makefiles-under,$(commands_bootmenu_local_path)/minui)
+
+include $(BUILD_EXECUTABLE)
+
+###########################
+
+endif # !TARGET_SIMULATOR
+endif # TARGET_ARCH arm
