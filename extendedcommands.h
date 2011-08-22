@@ -49,8 +49,8 @@ show_menu_tools(void);
 int
 show_menu_recovery(void);
 
-int
-mount_usb_storage(void);
+//int 
+//mount_usb_storage(void);
 
 int
 snd_init(int ui);

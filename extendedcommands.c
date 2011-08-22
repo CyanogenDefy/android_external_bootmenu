@@ -348,6 +348,7 @@ show_menu_recovery(void) {
     case RECOVERY_STOCK:
       ui_print("Rebooting to Stock Recovery..\n");
 
+      //optional
       f = fopen("/data/.recovery_mode", "w");
       if (f != NULL) {
         fprintf(f, "%s", "1");
@@ -365,7 +366,7 @@ show_menu_recovery(void) {
       sync();
       status = exec_and_wait(args);
       if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-        ui_printf("Error in %s\n(Status %d)\n", FILE_STOCKRECOVERY, WEXITSTATUS(status));
+        LOGE("Error in %s\n(Status %d)\n", FILE_STOCKRECOVERY, WEXITSTATUS(status));
       }
       res = 2;
       break;
@@ -378,6 +379,8 @@ show_menu_recovery(void) {
   free(title_headers);
   return res;
 }
+
+/* made in sdcard.sh
 
 #ifndef BOARD_UMS_LUNFILE
 #define BOARD_UMS_LUNFILE  "/sys/devices/platform/usb_mass_storage/lun0/file"
@@ -400,6 +403,8 @@ mount_usb_storage(void) {
   }
   return 1;
 }
+
+*/
 
 int
 snd_init(int ui) {
@@ -482,7 +487,7 @@ show_config_bootmode(void) {
   };
   char** title_headers = prepend_title(headers);
 
-  char* items[5][2] = {
+  char* items[4][2] = {
         { "   [" ITEM_2NDINIT "]", "  *[" ITEM_2NDINIT "]" },
         { "   [" ITEM_2NDBOOT "]", "  *[" ITEM_2NDBOOT "]" },
         { "   [" ITEM_NORMAL "]", "  *[" ITEM_NORMAL "]" },
