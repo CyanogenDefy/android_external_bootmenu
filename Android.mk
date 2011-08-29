@@ -15,7 +15,7 @@ bootmenu_sources := \
 
 include $(CLEAR_VARS)
 
-BOOTMENU_VERSION:=1.0.2
+BOOTMENU_VERSION:=1.0.3
 
 ifeq ($(BOARD_USES_BOOTMENU),true)
 

@@ -251,10 +251,10 @@ show_menu_tools(void) {
 
   char* items[] =  {
         "  [ADB Daemon]",
-        "  [USB Mass Storage]",
-        "  [USB Drivers]",
-        "  [USB Mount /system]",
-        "  [USB Mount /data]",
+        "  [Share SD Card]",
+        "  [Share Drivers]",
+        "  [Share system]",
+        "  [Share data]",
         "  --Go Back.",
         NULL
   };
