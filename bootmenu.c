@@ -32,18 +32,19 @@
 
 
 enum { 
-  INSTALL_SUCCESS,
-  INSTALL_ERROR,
-  INSTALL_CORRUPT
+  BUTTON_ERROR,
+  BUTTON_PRESSED,
+  BUTTON_TIMEOUT,
 };
-
-static const char *FILE_PRE_MENU = "/system/bootmenu/script/pre_bootmenu.sh";
-static const char *FILE_POST_MENU = "/system/bootmenu/script/post_bootmenu.sh";
 
 static char** main_headers = NULL;
 
-char**
-prepend_title(const char** headers) {
+/**
+ * prepend_title()
+ *
+ */
+char** prepend_title(const char** headers) {
+
   char* title[] = { "Android BootMenu <v"
                     EXPAND(BOOTMENU_VERSION) ">",
                     "",
@@ -65,9 +66,21 @@ prepend_title(const char** headers) {
   return new_headers;
 }
 
-int
-get_menu_selection(char** headers, char** items, int menu_only,
-                   int initial_selection) {
+void free_menu_headers(char **headers) {
+  char** p = headers;
+  for (p = headers; *p; ++p) *p = NULL;
+  if (headers != NULL) {
+    free(headers);
+    headers = NULL;
+  }
+}
+
+/**
+ * get_menu_selection()
+ *
+ */
+int get_menu_selection(char** headers, char** items, int menu_only,
+                       int initial_selection) {
   // throw away keys pressed previously, so user doesn't
   // accidentally trigger menu items.
   ui_clear_key_queue();
@@ -107,12 +120,20 @@ get_menu_selection(char** headers, char** items, int menu_only,
   return chosen_item;
 }
 
+/**
+ * compare_string()
+ *
+ */
 static int compare_string(const void* a, const void* b) {
   return strcmp(*(const char**)a, *(const char**)b);
 }
 
-static void
-prompt_and_wait() {
+/**
+ * prompt_and_wait()
+ *
+ */
+static void prompt_and_wait() {
+
   int select = 0;
 
   for (;;) {
@@ -147,34 +168,46 @@ prompt_and_wait() {
   }
 }
 
-static void
-ui_finish(void) {
+/**
+ * ui_finish()
+ *
+ */
+static void ui_finish(void) {
   LOGI("Exiting....\n");
   ui_final();
 }
 
-static int
-wait_key(int key) {
+/**
+ * wait_key()
+ *
+ */
+static int wait_key(int key) {
   int i;
-  int result = INSTALL_SUCCESS;
+  int result = 0;
 
   evt_init();
-  ui_clear_key_queue();
+  //ui_clear_key_queue();
   for(i=0; i < 100; i++) {
     if(ui_key_pressed(key)) {
-      result = INSTALL_ERROR;
+      led_alert("blue", DISABLE);
+      result = 1;
+      break;
     }
     else {
-      usleep(15000); //15ms
+      usleep(15000); //15ms * 100
     }
   }
   evt_exit();
   return result;
 }
 
-static int
-run_bootmenu(void) {
-  int mode, status = INSTALL_SUCCESS;
+/**
+ * run_bootmenu()
+ *
+ */
+static int run_bootmenu(void) {
+  int defmode, mode, status = BUTTON_ERROR;
+  int adb_started = 0;
   time_t start = time(NULL);
 
   LOGI("Starting bootmenu on %s", ctime(&start));
@@ -186,63 +219,94 @@ run_bootmenu(void) {
 
     led_alert("blue", ENABLE);
 
-    mode = get_bootmode();
+    defmode = get_default_bootmode();
+
+    // get and clean one shot bootmode (or default)
+    mode = get_bootmode(1);
 
     // dont wait if bootmenu or recovery mode asked
-    if (mode != MODE_BOOTMENU && mode != MODE_RECOVERY) {
-      status = wait_key(KEY_VOLUMEDOWN);
+    if (mode != int_mode("bootmenu") && mode != int_mode("recovery")) {
+        status = (wait_key(KEY_VOLUMEDOWN) ? BUTTON_PRESSED : BUTTON_TIMEOUT);
     }
 
-    if (status != INSTALL_ERROR) {
+    // only start adb if usb is connected
+    if (usb_connected()) {
+      if (mode == int_mode("2nd-init-adb") || mode == int_mode("2nd-boot-adb")) {
+         exec_script(FILE_ADBD, DISABLE);
+         adb_started = 1;
+      }
+    }
 
-      switch (mode) {
-        case MODE_2NDINIT:
+    // on timeout
+    if (status != BUTTON_PRESSED) {
+
+      if (mode == int_mode("bootmenu")) {
+          led_alert("blue", DISABLE);
+          status = BUTTON_PRESSED;
+      }
+      else if (mode == int_mode("2nd-init") || mode == int_mode("2nd-init-adb")) {
           led_alert("blue", DISABLE);
           led_alert("green", ENABLE);
           snd_init(DISABLE);
           led_alert("green", DISABLE);
-          break;
-
-        case MODE_2NDBOOT:
+          status = BUTTON_TIMEOUT;
+      }
+      else if (mode == int_mode("2nd-boot") || mode == int_mode("2nd-boot-adb")) {
           led_alert("blue", DISABLE);
           led_alert("red", ENABLE);
           snd_boot(DISABLE);
           led_alert("red", DISABLE);
-          break;
-
-        case MODE_BOOTMENU:
-          led_alert("blue", DISABLE);
-          status = INSTALL_ERROR;
-          break;
-
-        case MODE_RECOVERY:
+          status = BUTTON_TIMEOUT;
+      }
+      else if (mode == int_mode("recovery")) {
           led_alert("blue", DISABLE);
           exec_script(FILE_STABLERECOVERY, DISABLE);
-          status = INSTALL_SUCCESS;
-          break;
+          status = BUTTON_TIMEOUT;
       }
+
     }
 
-    if (status != INSTALL_SUCCESS) {
-      ui_init();
-      ui_set_background(BACKGROUND_DEFAULT);
+    if (status == BUTTON_PRESSED ) {
 
-      ui_show_text(ENABLE);
-      LOGI("Start Android BootMenu....\n");
+        ui_init();
+        ui_set_background(BACKGROUND_DEFAULT);
+        ui_show_text(ENABLE);
+        LOGI("Start Android BootMenu....\n");
 
-      main_headers = prepend_title((const char**)MENU_HEADERS);
-      prompt_and_wait();
-      free(main_headers);
+        main_headers = prepend_title((const char**)MENU_HEADERS);
 
-      ui_finish();
+        /* can be buggy
+
+        if (!adb_started && usb_connected()) {
+            ui_print("Usb connected, starting adb...\n\n");
+            //ui_print("Battery level: %d %%\n", battery_level());
+            exec_script(FILE_ADBD, DISABLE);
+        }
+        */
+
+        ui_print("Current mode: %s\n", str_mode(mode));
+        ui_print("Default mode: %s\n", str_mode(defmode));
+
+
+        prompt_and_wait();
+        free_menu_headers(main_headers);
+
+        ui_finish();
     }
 
   }
   return EXIT_SUCCESS;
 }
 
-int
-main(int argc, char **argv) {
+
+/**
+ * main()
+ *
+ * Here is the hijack part, logwrapper is linked to bootmenu
+ * we trap some of logged commands from init.rc
+ *
+ */
+int main(int argc, char **argv) {
   char* hijacked_executable = argv[0];
   int result;
 
@@ -261,7 +325,15 @@ main(int argc, char **argv) {
     return result;
   }
   else if (argc >= 3 && 0 == strcmp(argv[2], "pds")) {
+    //kept for stock rom compatibility, cyanogen use postbootmenu
     real_execute(argc, argv);
+    exec_script(FILE_OVERCLOCK, DISABLE);
+    result = exec_script(FILE_POST_MENU, DISABLE);
+    bypass_sign("no");
+    sync();
+    return result;
+  }
+  else if (argc == 2 && 0 == strcmp(argv[1], "postbootmenu")) {
     exec_script(FILE_OVERCLOCK, DISABLE);
     result = exec_script(FILE_POST_MENU, DISABLE);
     bypass_sign("no");
@@ -272,3 +344,4 @@ main(int argc, char **argv) {
     return real_execute(argc, argv);
   }
 }
+

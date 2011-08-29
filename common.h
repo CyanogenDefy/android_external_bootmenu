@@ -37,6 +37,8 @@ void ui_clear_key_queue();
 // The screen is small, and users may need to report these messages to support,
 // so keep the output short and not too cryptic.
 void ui_print(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+// same without args
+void ui_print_str(char *str);
 
 // Display some header text followed by a menu of items, which appears
 // at the top of the screen (in place of any scrolling ui_print()

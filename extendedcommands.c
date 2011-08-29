@@ -32,24 +32,65 @@
 
 //#define DEBUG_ALLOC
 
-#define ITEM_2NDINIT    "2nd-init"
-#define ITEM_2NDBOOT    "2nd-boot"
-#define ITEM_NORMAL     "Stock"
-#define ITEM_2NDADB     "2nd-init + adb"
+#define MODES_COUNT 7
+const char* modes[] = {
+  "bootmenu",
+  "2nd-init",
+  "2nd-boot",
+  "normal",
+  "2nd-init-adb",
+  "2nd-boot-adb",
+  "recovery",
+};
 
-int
-show_menu_boot(void) {
+//user friendly menu labels
+#define LABEL_2NDINIT    "2nd-init"
+#define LABEL_2NDBOOT    "2nd-boot"
+#define LABEL_NORMAL     "Stock"
+#define LABEL_2NDINIT_D  "2nd-init + adb"
+#define LABEL_2NDBOOT_D  "2nd-boot + adb"
 
-  #define BOOT_DEFAULT    0
+/**
+ * int_mode()
+ *
+ */
+int int_mode(char * mode) {
+  int m;
+  for (m=0; m < MODES_COUNT; m++) {
+    if (0 == strcmp(modes[m], mode)) {
+      return m;
+    }
+  }
+  return 0;
+}
+
+/**
+ * str_mode()
+ *
+ */
+const char* str_mode(int mode) {
+  if (mode >= 0 && mode < MODES_COUNT) {
+    return modes[mode];
+  }
+  return "bootmenu";
+}
+
+/**
+ * show_menu_boot() 
+ *
+ */
+int show_menu_boot(void) {
+
   #define BOOT_2NDINIT    1
   #define BOOT_2NDBOOT    2
   #define BOOT_NORMAL     3
-  #define BOOT_ADBINIT    4
+  #define BOOT_2NDINIT_D  4
+  #define BOOT_2NDBOOT_D  5
 
-  #define BOOT_TEST     5
-  #define BOOT_FBTEST   6
-  #define BOOT_EVTTEST  7
-  #define BOOT_PNGTEST  8
+  #define BOOT_FBTEST     6
+  #define BOOT_EVTTEST    7
+  #define BOOT_PNGTEST    8
+  #define BOOT_TEST       9
 
   int status, res = 0;
   const char* headers[] = {
@@ -59,71 +100,68 @@ show_menu_boot(void) {
   };
   char** title_headers = prepend_title(headers);
 
-  char* items[11] =  {
-        "  +Set Default: [" ITEM_2NDINIT "] -->",
-        "  [" ITEM_2NDINIT "]",
-        "  [" ITEM_2NDBOOT "]",
-        "  [" ITEM_NORMAL "]",
-        "  [" ITEM_2NDADB "]",
+  char* items[11] = {
+        "  +Set Default: [" LABEL_2NDINIT_D "] -->",
+        "  [" LABEL_2NDINIT "]",
+        "  [" LABEL_2NDBOOT "]",
+        "  [" LABEL_NORMAL "]",
+        "  [" LABEL_2NDINIT_D "]",
+        "  [" LABEL_2NDBOOT_D "]",
+
 #ifdef DEBUG_ALLOC
-        "  [test all]",
         "  [test fb]",
         "  [test evt]",
         "  [test png]",
+        "  [test all]",
 #endif
         "  --Go Back.",
         NULL
   };
 
+  char lndef[64];
+  int chosen_item, bootmode;
+
   for (;;) {
-    int bootmode = get_bootmode();
-    switch (bootmode) {
-      case MODE_BOOTMENU: items[0] = "  +Set Default: [BootMenu] -->"; break;
-      case MODE_2NDINIT:  items[0] = "  +Set Default: [" ITEM_2NDINIT "] -->"; break;
-      case MODE_2NDBOOT:  items[0] = "  +Set Default: [" ITEM_2NDBOOT "] -->"; break;
-      case MODE_NORMAL:   items[0] = "  +Set Default: [" ITEM_NORMAL "] -->"; break;
+    bootmode = get_default_bootmode();
+
+    sprintf(lndef,"  +Set Default: [%s] -->", str_mode(bootmode) );
+    items[0] = lndef;
+
+    chosen_item = get_menu_selection(title_headers, items, 1, 0);
+
+    //Submenu: select default mode
+    if (chosen_item == 0) {
+        show_config_bootmode();
+        continue;
     }
 
-    int chosen_item = get_menu_selection(title_headers, items, 1, 0);
-
-    switch (chosen_item) {
-
-      case BOOT_DEFAULT:
-        status = show_config_bootmode();
-        break;
-
-      case BOOT_2NDINIT:
-        next_bootmode_write("2nd-init");
+    //Next boot modes
+    else if (chosen_item < BOOT_NORMAL) {
+        if (next_bootmode_write( str_mode(chosen_item) ) != 0) {
+            //write error
+            continue;
+        }
         sync();
         reboot(RB_AUTOBOOT);
         goto exit_loop;
+    }
 
-      case BOOT_2NDBOOT:
-        //free(title_headers);
-        //status = snd_boot(ENABLE);
-        next_bootmode_write("2nd-boot");
-        sync();
-        reboot(RB_AUTOBOOT);
-        goto exit_loop;
-
-      case BOOT_NORMAL:
-        res = -1;
-        next_bootmode_write("normal");
-        sync();
-        reboot(RB_AUTOBOOT);
-        goto exit_loop;
-
-      case BOOT_ADBINIT:
-        //2nd-init with adb enabled for
-        // direct boot (overlay bug)
-        free(title_headers);
-        exec_script(FILE_ADBD, ENABLE);
-        sync();
+    //Direct boot modes (with adb, but buggy overlay)
+    else if (chosen_item == BOOT_2NDINIT_D) {
+        free_menu_headers(title_headers);
+        if (usb_connected() && !adb_started()) exec_script(FILE_ADBD, ENABLE);
         status = snd_init(ENABLE);
         return (status == 0);
-
+    }
+    else if (chosen_item == BOOT_2NDBOOT_D) {
+        free_menu_headers(title_headers);
+        if (usb_connected() && !adb_started()) exec_script(FILE_ADBD, ENABLE);
+        status = snd_boot(ENABLE);
+        return (status == 0);
+    }
+    else
+    switch (chosen_item) {
 #ifdef DEBUG_ALLOC
-
       case BOOT_TEST:
         led_alert("green", 1);
         ui_final();
@@ -156,21 +194,81 @@ show_menu_boot(void) {
         goto exit_loop;
 #endif
       default:
-        res = 0;
         goto exit_loop;
     }
-  }
+
+  } //for
 
 exit_loop:
 
-  free(title_headers);
+  free_menu_headers(title_headers);
 
   return res;
 }
 
+/**
+ * show_config_bootmode()
+ *
+ */
+int show_config_bootmode(void) {
+
+  //last mode enabled for default modes (adb disabled)
+  #define LAST_MODE 4
+
+  int res = 0;
+  const char* headers[3] = {
+          " # Boot --> Set Default -->",
+          "",
+          NULL
+  };
+  char** title_headers = prepend_title(headers);
+
+  static char options[8][64];
+  char* menu_opts[8];
+  int i, mode, chosen_item;
+
+  for (;;) {
+
+    mode = get_default_bootmode();
+
+    for(i = 0; i < LAST_MODE; ++i) {
+      sprintf(options[i], "   [%s]", str_mode(i));
+      if(mode == i)
+        options[i][2] = '*';
+      menu_opts[i] = options[i];
+    }
+
+    menu_opts[LAST_MODE] = "   --Go Back.";
+    menu_opts[LAST_MODE+1] = NULL;
+
+    chosen_item = get_menu_selection(title_headers, menu_opts, 1, mode);
+    if (chosen_item >= LAST_MODE || strlen(menu_opts[chosen_item]) == 0) {
+      //back
+      res=1;
+      break;
+    }
+    if (set_default_bootmode(chosen_item) == 0) {
+      ui_print("Done..\n");
+      continue;
+    }
+    else {
+      ui_print("Failed to setup default boot mode.\n");
+      break;
+    }
+  }
+
+  free_menu_headers(title_headers);
+  return res;
+}
+
+
 #if FULL_VERSION
-int
-show_menu_system(void) {
+
+/**
+ * show_menu_system()
+ *
+ */
+int show_menu_system(void) {
 
   #define SYSTEM_OVERCLOCK  0
   #define SYSTEM_ROOT       1
@@ -226,19 +324,23 @@ show_menu_system(void) {
     select = chosen_item;
   }
 
-  free(title_headers);
+  free_menu_headers(title_headers);
   return 0;
 }
 #endif //#if FULL_VERSION
 
-int
-show_menu_tools(void) {
+
+/**
+ * show_menu_tools()
+ *
+ */
+int show_menu_tools(void) {
 
 #define TOOL_ADB     0
-#define TOOL_USB     1
-#define TOOL_CDROM   2
-#define TOOL_SYSTEM  3
-#define TOOL_DATA    4
+#define TOOL_USB     2
+#define TOOL_CDROM   3
+#define TOOL_SYSTEM  4
+#define TOOL_DATA    5
 
   int status;
 
@@ -251,10 +353,12 @@ show_menu_tools(void) {
 
   char* items[] =  {
         "  [ADB Daemon]",
-        "  [USB Mass Storage]",
-        "  [USB Drivers]",
-        "  [USB Mount /system]",
-        "  [USB Mount /data]",
+        "",
+        "  [Share SD Card]",
+        "  [Share Drivers]",
+        "  [Share system]",
+        "  [Share data]",
+        "",
         "  --Go Back.",
         NULL
   };
@@ -297,13 +401,15 @@ show_menu_tools(void) {
       break;
   }
 
-  free(title_headers);
+  free_menu_headers(title_headers);
   return 0;
 }
 
-
-int
-show_menu_recovery(void) {
+/**
+ * show_menu_recovery()
+ *
+ */
+int show_menu_recovery(void) {
 
   #define RECOVERY_CUSTOM     0
   #define RECOVERY_STABLE     1
@@ -332,14 +438,14 @@ show_menu_recovery(void) {
 
   switch (chosen_item) {
     case RECOVERY_CUSTOM:
-      ui_print("Starting Recovery..\n");
+      ui_print("Starting Dev Recovery..\n");
       ui_print("This can take a couple of seconds.\n");
       status = exec_script(FILE_CUSTOMRECOVERY, ENABLE);
       if (!status) res = 1;
       break;
 
     case RECOVERY_STABLE:
-      ui_print("Starting Stable Recovery..\n");
+      ui_print("Starting Recovery..\n");
       ui_print("This can take a couple of seconds.\n");
       status = exec_script(FILE_STABLERECOVERY, ENABLE);
       if (!status) res = 1;
@@ -348,35 +454,14 @@ show_menu_recovery(void) {
     case RECOVERY_STOCK:
       ui_print("Rebooting to Stock Recovery..\n");
 
-      //optional
-      f = fopen("/data/.recovery_mode", "w");
-      if (f != NULL) {
-        fprintf(f, "%s", "1");
-        fclose(f);
-      }
-
       sync();
       __reboot(LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2, LINUX_REBOOT_CMD_RESTART2, "recovery");
-/*
-      args = malloc(sizeof(char*) * 3);
-      args[0] = (char *) FILE_STOCKRECOVERY;
-      args[1] = "recovery";
-      args[2] = NULL;
-
-      sync();
-      status = exec_and_wait(args);
-      if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-        LOGE("Error in %s\n(Status %d)\n", FILE_STOCKRECOVERY, WEXITSTATUS(status));
-      }
-      res = 2;
-      break;
-*/
 
     default:
       break;
   }
 
-  free(title_headers);
+  free_menu_headers(title_headers);
   return res;
 }
 
@@ -406,17 +491,21 @@ mount_usb_storage(void) {
 
 */
 
-int
-snd_init(int ui) {
+
+/**
+ * snd_init()
+ *
+ */
+int snd_init(int ui) {
   int status;
   int i;
 
   bypass_sign("yes");
 
   if (ui)
-    ui_print("Start " ITEM_2NDINIT " boot....\n");
+    ui_print("Start " LABEL_2NDINIT " boot....\n");
   else
-    LOGI("Start " ITEM_2NDINIT " boot....\n");
+    LOGI("Start " LABEL_2NDINIT " boot....\n");
 
   status = exec_script(FILE_2NDINIT, ui);
   if (status) {
@@ -441,17 +530,20 @@ snd_init(int ui) {
   return 0;
 }
 
-int
-snd_boot(int ui) {
+/**
+ * snd_boot()
+ *
+ */
+int snd_boot(int ui) {
   int status;
   int i;
 
   bypass_sign("yes");
 
   if (ui)
-    ui_print("Start " ITEM_2NDBOOT " boot....\n");
+    ui_print("Start " LABEL_2NDBOOT " boot....\n");
   else
-    LOGI("Start " ITEM_2NDBOOT " boot....\n");
+    LOGI("Start " LABEL_2NDBOOT " boot....\n");
 
   status = exec_script(FILE_2NDBOOT, ui);
   if (status) {
@@ -476,153 +568,126 @@ snd_boot(int ui) {
   return 0;
 }
 
-int
-show_config_bootmode(void) {
+// --------------------------------------------------------
 
-  int res = -1;
-  const char* headers[] = {
-          " # Boot --> Set Default -->",
-          "",
-          NULL
-  };
-  char** title_headers = prepend_title(headers);
-
-  char* items[4][2] = {
-        { "   [" ITEM_2NDINIT "]", "  *[" ITEM_2NDINIT "]" },
-        { "   [" ITEM_2NDBOOT "]", "  *[" ITEM_2NDBOOT "]" },
-        { "   [" ITEM_NORMAL "]", "  *[" ITEM_NORMAL "]" },
-        { "   [BootMenu]", "  *[BootMenu]" }
-  };
-
-  for (;;) {
-    static char* options[6];
-
-    int i;
-    int mode = get_bootmode();
-
-    for(i = 0; i < 4; ++i) {
-      if(mode == i)
-        options[i] = items[i][1];
-      else
-        options[i] = items[i][0];
-    }
-
-    options[4] = "   --Go Back.";
-    options[5] = NULL;
-    
-    int chosen_item = get_menu_selection(title_headers, options, 1, mode);
-    if (chosen_item == 4) {
-      res=0;
-      break;
-    }
-    if (set_bootmode(chosen_item) == 0) {
-      ui_print("Done..\n");
-      continue;
-    }
-    else {
-      ui_print("Failed to setup default boot mode.\n");
-      break;
-    }
-  }
-
-  free(title_headers);
-  return res;
-}
-
-int
-set_bootmode(int mode) {
-  switch (mode) {
-    case MODE_2NDINIT:
-      ui_print("Set " ITEM_2NDINIT "....");
-      return bootmode_write("2nd-init");
-    case MODE_2NDBOOT:
-      ui_print("Set " ITEM_2NDBOOT "....");
-      return bootmode_write("2nd-boot");
-    case MODE_NORMAL:
-      ui_print("Set " ITEM_NORMAL "....");
-      return bootmode_write("normal");
-    case MODE_BOOTMENU:
-      ui_print("Set BootMenu....");
-      return bootmode_write("bootmenu");
-  }
-  return 1;
-}
-
-int
-get_bootmode(void) {
-  FILE* f = fopen(FILE_BOOTMODE, "r");
-  char mode[30];
-
+/**
+ * get_default_bootmode()
+ *
+ */
+int get_default_bootmode() {
+  char mode[32];
+  int m;
+  FILE* f = fopen(FILE_DEFAULTBOOTMODE, "r");
   if (f != NULL) {
+      fscanf(f, "%s", mode);
+      fclose(f);
 
-    // One-shot bootmode, bootmode.conf is deleted after
+      m = int_mode(mode);
+      LOGI("default_bootmode=%d\n", m);
 
-    fscanf(f, "%s", mode);
-    fclose(f);
+      if (m >=0) return m;
+      else return int_mode("bootmenu");
 
-    //unlink(FILE_BOOTMODE);
-    exec_script(FILE_BOOTMODE_CLEAN,DISABLE);
-
-    if (0 == strcmp(mode, "normal"))
-      return MODE_NORMAL;
-    else if (0 == strcmp(mode, "2nd-init"))
-      return MODE_2NDINIT;
-    else if (0 == strcmp(mode, "2nd-boot"))
-      return MODE_2NDBOOT;
-    else if (0 == strcmp(mode, "bootmenu"))
-      return MODE_BOOTMENU;
-    else if (0 == strcmp(mode, "recovery"))
-      return MODE_RECOVERY;
-  }
-
-  f = fopen(FILE_DEFAULTBOOTMODE, "r");
-
-  if (f != NULL) {
-    fscanf(f, "%s", mode);
-    fclose(f);
-
-    if (0 == strcmp(mode, ITEM_NORMAL))
-      return MODE_NORMAL;
-    else if (0 == strcmp(mode, ITEM_2NDINIT))
-      return MODE_2NDINIT;
-    else if (0 == strcmp(mode, ITEM_2NDBOOT))
-      return MODE_2NDBOOT;
-    else if (0 == strcmp(mode, ITEM_2NDADB))
-      return MODE_2NDADB;
-    else
-      return MODE_BOOTMENU;
   }
   return -1;
 }
 
-int
-bootmode_write(const char* str) {
+/**
+ * get_bootmode()
+ *
+ */
+int get_bootmode(int clean) {
+  char mode[32];
+  int m;
+  FILE* f = fopen(FILE_BOOTMODE, "r");
+  if (f != NULL) {
+
+      // One-shot bootmode, bootmode.conf is deleted after
+      fscanf(f, "%s", mode);
+      fclose(f);
+
+      if (clean) {
+          // unlink(FILE_BOOTMODE); //buggy unlink ?
+          exec_script(FILE_BOOTMODE_CLEAN,DISABLE);
+      }
+
+      m = int_mode(mode);
+      LOGI("bootmode=%d\n", m);
+      if (m >= 0) return m;
+  }
+
+  return get_default_bootmode();
+}
+
+/**
+ * set_default_bootmode()
+ *
+ */
+int set_default_bootmode(int mode) {
+
+  char log[64];
+  char* str = (char*) str_mode(mode);
+
+  if (mode < MODES_COUNT) {
+
+      ui_print("Set %s...\n", str);
+      return bootmode_write(str);
+  }
+
+  ui_print("ERROR: bad mode %d\n", mode);
+  return 1;
+}
+
+/**
+ * bootmode_write()
+ *
+ * write default boot mode in config file
+ */
+int bootmode_write(const char* str) {
   FILE* f = fopen(FILE_DEFAULTBOOTMODE, "w");
 
   if (f != NULL) {
     fprintf(f, "%s", str);
+    fflush(f);
     fclose(f);
-    return 0;
+    sync();
+    //double check
+    if (get_bootmode(0) == int_mode( (char*)str) ) {
+      return 0;
+    }
   }
+
+  ui_print("ERROR: unable to write mode %s\n", str);
   return 1;
 }
 
-int
-next_bootmode_write(const char* str) {
+/**
+ * next_bootmode_write()
+ *
+ * write next boot mode in config file
+ */
+int next_bootmode_write(const char* str) {
   FILE* f = fopen(FILE_BOOTMODE, "w");
 
   if (f != NULL) {
     fprintf(f, "%s", str);
+    fflush(f);
     fclose(f);
+    sync();
+    ui_print("Next boot mode set to %s\n\nRebooting...\n", str);
     return 0;
   }
-  ui_print("Next boot mode set to %s\n\nRebooting...\n", str);
 
   return 1;
 }
 
-int
-led_alert(const char* color, int value) {
+// --------------------------------------------------------
+
+/**
+ * led_alert()
+ *
+ */
+int led_alert(const char* color, int value) {
   char led_path[PATH_MAX];
   sprintf(led_path, "/sys/class/leds/%s/brightness", color);
   FILE* f = fopen(led_path, "w");
@@ -635,8 +700,11 @@ led_alert(const char* color, int value) {
   return 1;
 }
 
-int
-bypass_sign(const char* mode) {
+/**
+ * bypass_sign()
+ *
+ */
+int bypass_sign(const char* mode) {
   FILE* f = fopen(FILE_BYPASS, "w");
 
   if (f != NULL) {
@@ -647,8 +715,11 @@ bypass_sign(const char* mode) {
   return 1;
 }
 
-int
-bypass_check(void) {
+/**
+ * bypass_check()
+ *
+ */
+int bypass_check(void) {
    FILE* f = fopen(FILE_BYPASS, "r");
    char bypass[30];
 
@@ -662,8 +733,11 @@ bypass_check(void) {
   return 1;
 }
 
-int
-exec_and_wait(char** argp) {
+/**
+ * exec_and_wait()
+ *
+ */
+int exec_and_wait(char** argp) {
   pid_t pid;
   sig_t intsave, quitsave;
   sigset_t mask, omask;
@@ -693,10 +767,15 @@ exec_and_wait(char** argp) {
   return (pid == -1 ? -1 : pstat);
 }
 
-int
-exec_script(const char* filename, int ui) {
+/**
+ * exec_script()
+ *
+ */
+int exec_script(const char* filename, int ui) {
   int status;
   char** args;
+
+  LOGI("exec %s\n", filename);
 
   chmod(filename, 0755);
 
@@ -705,6 +784,8 @@ exec_script(const char* filename, int ui) {
   args[1] = NULL;
 
   status = exec_and_wait(args);
+
+  free(args);
 
   if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
     if (ui) {
@@ -719,8 +800,11 @@ exec_script(const char* filename, int ui) {
   return 0;
 }
 
-int
-real_execute(int r_argc, char** r_argv) {
+/**
+ * real_execute()
+ *
+ */
+int real_execute(int r_argc, char** r_argv) {
   char* hijacked_executable = r_argv[0];
   int result = 0;
   int i;
@@ -744,3 +828,52 @@ real_execute(int r_argc, char** r_argv) {
   else
     return 0;
 }
+
+/**
+ * usb_connected()
+ *
+ */
+int usb_connected() {
+  int state;
+  FILE* f;
+
+  //usb should be 1 and ac 0
+  f = fopen(SYS_USB_CONNECTED, "r");
+  if (f != NULL) {
+    fscanf(f, "%d", &state);
+    fclose(f);
+    if (state) {
+      f = fopen(SYS_POWER_CONNECTED, "r");
+      if (f != NULL) {
+        fscanf(f, "%d", &state);
+        fclose(f);
+        return (state == 0);
+      }
+    }
+  }
+  return 0;
+}
+
+int adb_started() {
+  int res=0;
+  FILE* f;
+
+  
+
+  return res;
+}
+
+/**
+ * bettery_level()
+ *
+ */
+int battery_level() {
+  int state = 0;
+  FILE* f = fopen(SYS_BATTERY_LEVEL, "r");
+  if (f != NULL) {
+    fscanf(f, "%d", &state);
+    fclose(f);
+  }
+  return state;
+}
+

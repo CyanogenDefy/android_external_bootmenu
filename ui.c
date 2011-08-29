@@ -29,8 +29,10 @@
 #include "minui/minui.h"
 #include "bootmenu_ui.h"
 
+#ifndef MAX_ROWS
 #define MAX_COLS 96
 #define MAX_ROWS 40
+#endif
 
 #define CHAR_WIDTH 10
 #define CHAR_HEIGHT 18
@@ -377,7 +379,9 @@ void evt_init(void)
 
 void evt_exit(void)
 {
-    ev_exit();
+    if (evt_enabled) {
+      ev_exit();
+    }
     evt_enabled = 0;
 }
 
@@ -450,14 +454,10 @@ void ui_reset_progress()
     pthread_mutex_unlock(&gUpdateMutex);
 }
 
-void ui_print(const char *fmt, ...)
-{
+void ui_print_str(char *str) {
     char buf[256];
-    va_list ap;
-    va_start(ap, fmt);
-    vsnprintf(buf, 256, fmt, ap);
-    va_end(ap);
 
+    strncpy(buf, str, 255);
     fputs(buf, stdout);
 
     // This can get called before ui_init(), so be careful.
@@ -477,6 +477,18 @@ void ui_print(const char *fmt, ...)
         update_screen_locked();
     }
     pthread_mutex_unlock(&gUpdateMutex);
+
+}
+
+void ui_print(const char *fmt, ...)
+{
+    char buf[256];
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(buf, 256, fmt, ap);
+    va_end(ap);
+
+    ui_print_str(buf);
 }
 
 void ui_start_menu(char** headers, char** items, int initial_selection) {

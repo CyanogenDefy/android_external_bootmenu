@@ -78,11 +78,9 @@ extern char* MENU_HEADERS[];
 // Text of menu items.
 extern char* MENU_ITEMS[];
 
-char**
-prepend_title(const char** headers);
-
-int
-get_menu_selection(char** headers, char** items, int menu_only,
-                   int initial_selection);
+// Menus title
+char** prepend_title(const char** headers);
+void free_menu_headers(char** headers);
+int get_menu_selection(char** headers, char** items, int menu_only, int initial_selection);
 
 #endif

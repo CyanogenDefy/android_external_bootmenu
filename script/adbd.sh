@@ -8,9 +8,12 @@ export PATH=/sbin:/system/xbin:/system/bin
 
 ######## Main Script
 
-[ -L /tmp ] && rm /tmp
-mkdir /tmp
-echo 'msc_adb' > /dev/usb_device_mode
+mkdir -p /tmp
+
+echo acm > /dev/usb_device_mode
+sleep 1
+
+echo msc_adb > /dev/usb_device_mode
 
 PATH=/sbin:/system/xbin:/system/bin /sbin/adbd.root &
 
