@@ -65,7 +65,7 @@ LOCAL_STATIC_LIBRARIES += libstdc++ libc libcutils
 
 LOCAL_FORCE_STATIC_EXECUTABLE := true
 
-LOCAL_MODULE_PATH := $(PRODUCT_OUT)/system/bootmenu/binary/
+LOCAL_MODULE_PATH := $(PRODUCT_OUT)/system/bootmenu/binary
 
 include $(call all-makefiles-under,$(commands_bootmenu_local_path)/minui)
 
