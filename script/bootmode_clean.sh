@@ -2,4 +2,5 @@
 
 mount_ext3.sh cache /cache
 
-rm -f /cache/recovery/bootmode.conf
+mv /cache/recovery/bootmode.conf /cache/recovery/last_bootmode
+

@@ -8,6 +8,10 @@ export PATH=/sbin:/system/xbin:/system/bin
 
 ######## Main Script
 
+# there is a problem, this script is executed if we 
+# exit from recovery...
+
+echo 0 > /sys/class/leds/blue/brightness
 
 ## Run Init Script
 
@@ -20,7 +24,21 @@ chmod 755 /system/bootmenu/init.d/*
 run-parts /system/bootmenu/init.d/
 
 # normal cleanup here (need fix in recovery first)
-# disabled...
+# ...
+
+
+# fast button warning (to check when script is really used)
+echo 1 > /sys/class/leds/button-backlight/brightness
+usleep 50000
+echo 0 > /sys/class/leds/button-backlight/brightness
+usleep 50000
+echo 1 > /sys/class/leds/button-backlight/brightness
+usleep 50000
+echo 0 > /sys/class/leds/button-backlight/brightness
+usleep 50000
+echo 1 > /sys/class/leds/button-backlight/brightness
+usleep 50000
+echo 0 > /sys/class/leds/button-backlight/brightness
 
 
 ######## Don't Delete.... ########################
