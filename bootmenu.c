@@ -163,6 +163,7 @@ wait_key(int key) {
   for(i=0; i < 100; i++) {
     if(ui_key_pressed(key)) {
       result = 1;
+      break;
     }
     else {
       usleep(15000); //15ms
