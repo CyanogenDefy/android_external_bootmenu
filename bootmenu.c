@@ -207,7 +207,7 @@ run_bootmenu(void) {
     }
 
     // on timeout
-    if (status == INSTALL_ERROR) {
+    if (status != INSTALL_SUCCESS) {
 
       if (mode == int_mode("bootmenu")) {
           led_alert("blue", DISABLE);
