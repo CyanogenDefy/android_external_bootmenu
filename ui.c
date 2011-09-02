@@ -29,8 +29,10 @@
 #include "minui/minui.h"
 #include "bootmenu_ui.h"
 
+#ifndef MAX_ROWS
 #define MAX_COLS 96
 #define MAX_ROWS 40
+#endif
 
 #define CHAR_WIDTH 10
 #define CHAR_HEIGHT 18
