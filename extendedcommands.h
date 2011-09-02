@@ -4,7 +4,9 @@ enum {
   MODE_NORMAL,
   MODE_BOOTMENU,
   MODE_RECOVERY,
-  MODE_2NDADB,
+
+  MODE_2NDINIT_D,
+  MODE_2NDBOOT_D,
 };
 
 static const char *FILE_2NDINIT   = "/system/bootmenu/script/2nd-init.sh";
@@ -14,7 +16,9 @@ static const char *FILE_SDCARD    = "/system/bootmenu/script/sdcard.sh";
 static const char *FILE_CDROM     = "/system/bootmenu/script/cdrom.sh";
 static const char *FILE_SYSTEM    = "/system/bootmenu/script/system.sh";
 static const char *FILE_DATA      = "/system/bootmenu/script/data.sh";
+
 static const char *FILE_OVERCLOCK = "/system/bootmenu/script/overclock.sh";
+static const char *FILE_OVERCLOCK_CONF  = "/system/bootmenu/config/overclock.conf";
 
 static const char *FILE_CUSTOMRECOVERY  = "/system/bootmenu/script/recovery.sh";
 static const char *FILE_STABLERECOVERY  = "/system/bootmenu/script/recovery_stable.sh";
@@ -22,13 +26,12 @@ static const char *FILE_BOOTMODE_CLEAN  = "/system/bootmenu/script/bootmode_clea
 
 static const char *FILE_DEFAULTBOOTMODE = "/system/bootmenu/config/default_bootmode.conf";
 static const char *FILE_BOOTMODE        = "/cache/recovery/bootmode.conf";
-static const char *FILE_OVERCLOCK_CONF  = "/system/bootmenu/config/overclock.conf";
 static const char *FILE_BYPASS          = "/data/.bootmenu_bypass";
 static const char *FILE_STOCKRECOVERY   = "/system/bin/reboot";
 
 #if FULL_VERSION
 
-static const char *FILE_ROOT = "/system/bootmenu/script/unroot.sh";
+static const char *FILE_ROOT      = "/system/bootmenu/script/unroot.sh";
 static const char *FILE_UNINSTALL = "/system/bootmenu/script/uninstall.sh";
 
 int

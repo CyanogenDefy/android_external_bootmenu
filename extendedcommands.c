@@ -35,7 +35,8 @@
 #define ITEM_2NDINIT    "2nd-init"
 #define ITEM_2NDBOOT    "2nd-boot"
 #define ITEM_NORMAL     "Stock"
-#define ITEM_2NDADB     "2nd-init + adb"
+#define ITEM_2NDINIT_D  "2nd-init adb"
+#define ITEM_2NDBOOT_D  "2nd-boot adb"
 
 int
 show_menu_boot(void) {
@@ -44,12 +45,14 @@ show_menu_boot(void) {
   #define BOOT_2NDINIT    1
   #define BOOT_2NDBOOT    2
   #define BOOT_NORMAL     3
-  #define BOOT_ADBINIT    4
 
-  #define BOOT_TEST     5
-  #define BOOT_FBTEST   6
-  #define BOOT_EVTTEST  7
-  #define BOOT_PNGTEST  8
+  #define BOOT_2NDINIT_D  5
+  #define BOOT_2NDBOOT_D  6
+
+  #define BOOT_TEST     7
+  #define BOOT_FBTEST   8
+  #define BOOT_EVTTEST  9
+  #define BOOT_PNGTEST  10
 
   int status, res = 0;
   const char* headers[] = {
@@ -59,12 +62,15 @@ show_menu_boot(void) {
   };
   char** title_headers = prepend_title(headers);
 
-  char* items[11] =  {
+  char* items[] =  {
         "  +Set Default: [" ITEM_2NDINIT "] -->",
         "  [" ITEM_2NDINIT "]",
         "  [" ITEM_2NDBOOT "]",
         "  [" ITEM_NORMAL "]",
-        "  [" ITEM_2NDADB "]",
+        "",
+        "  [" ITEM_2NDINIT_D "]",
+        "  [" ITEM_2NDBOOT_D "]",
+
 #ifdef DEBUG_ALLOC
         "  [test all]",
         "  [test fb]",
@@ -78,10 +84,13 @@ show_menu_boot(void) {
   for (;;) {
     int bootmode = get_bootmode();
     switch (bootmode) {
-      case MODE_BOOTMENU: items[0] = "  +Set Default: [BootMenu] -->"; break;
-      case MODE_2NDINIT:  items[0] = "  +Set Default: [" ITEM_2NDINIT "] -->"; break;
-      case MODE_2NDBOOT:  items[0] = "  +Set Default: [" ITEM_2NDBOOT "] -->"; break;
-      case MODE_NORMAL:   items[0] = "  +Set Default: [" ITEM_NORMAL "] -->"; break;
+      case MODE_BOOTMENU:  items[0] = "  +Set Default: [BootMenu] -->"; break;
+      case MODE_2NDINIT:   items[0] = "  +Set Default: [" ITEM_2NDINIT "] -->"; break;
+      case MODE_2NDBOOT:   items[0] = "  +Set Default: [" ITEM_2NDBOOT "] -->"; break;
+      case MODE_NORMAL:    items[0] = "  +Set Default: [" ITEM_NORMAL "] -->"; break;
+
+      case MODE_2NDINIT_D: items[0] = "  +Set Default: [" ITEM_2NDINIT_D "] -->"; break;
+      case MODE_2NDBOOT_D: items[0] = "  +Set Default: [" ITEM_2NDBOOT_D "] -->"; break;
     }
 
     int chosen_item = get_menu_selection(title_headers, items, 1, 0);
@@ -99,8 +108,6 @@ show_menu_boot(void) {
         goto exit_loop;
 
       case BOOT_2NDBOOT:
-        //free(title_headers);
-        //status = snd_boot(ENABLE);
         next_bootmode_write("2nd-boot");
         sync();
         reboot(RB_AUTOBOOT);
@@ -113,14 +120,22 @@ show_menu_boot(void) {
         reboot(RB_AUTOBOOT);
         goto exit_loop;
 
-      case BOOT_ADBINIT:
-        //2nd-init with adb enabled for
-        // direct boot (overlay bug)
+      //2nd-init with adb enabled for
+      // direct boot (overlay bug)
+      case BOOT_2NDINIT_D:
         free(title_headers);
         exec_script(FILE_ADBD, ENABLE);
         sync();
         status = snd_init(ENABLE);
         return (status == 0);
+
+      case BOOT_2NDBOOT_D:
+        free(title_headers);
+        exec_script(FILE_ADBD, ENABLE);
+        sync();
+        status = snd_boot(ENABLE);
+        return (status == 0);
+
 
 #ifdef DEBUG_ALLOC
 
@@ -235,10 +250,10 @@ int
 show_menu_tools(void) {
 
 #define TOOL_ADB     0
-#define TOOL_USB     1
-#define TOOL_CDROM   2
-#define TOOL_SYSTEM  3
-#define TOOL_DATA    4
+#define TOOL_USB     2
+#define TOOL_CDROM   3
+#define TOOL_SYSTEM  4
+#define TOOL_DATA    5
 
   int status;
 
@@ -251,6 +266,7 @@ show_menu_tools(void) {
 
   char* items[] =  {
         "  [ADB Daemon]",
+        "",
         "  [Share SD Card]",
         "  [Share Drivers]",
         "  [Share system]",
@@ -487,31 +503,33 @@ show_config_bootmode(void) {
   };
   char** title_headers = prepend_title(headers);
 
-  char* items[4][2] = {
-        { "   [" ITEM_2NDINIT "]", "  *[" ITEM_2NDINIT "]" },
-        { "   [" ITEM_2NDBOOT "]", "  *[" ITEM_2NDBOOT "]" },
-        { "   [" ITEM_NORMAL "]", "  *[" ITEM_NORMAL "]" },
-        { "   [BootMenu]", "  *[BootMenu]" }
+  char* items[6][2] = {
+      { "   [" ITEM_2NDINIT "]",   "  *[" ITEM_2NDINIT "]" },
+      { "   [" ITEM_2NDBOOT "]",   "  *[" ITEM_2NDBOOT "]" },
+      { "   [" ITEM_NORMAL "]",    "  *[" ITEM_NORMAL "]" },
+      { "   [" ITEM_2NDINIT_D "]", "  *[" ITEM_2NDINIT_D "]" },
+      { "   [" ITEM_2NDBOOT_D "]", "  *[" ITEM_2NDBOOT_D "]" },
+      { "   [BootMenu]", "  *[BootMenu]" }
   };
 
   for (;;) {
-    static char* options[6];
+    static char* options[8];
 
     int i;
     int mode = get_bootmode();
 
-    for(i = 0; i < 4; ++i) {
+    for(i = 0; i < 6; ++i) {
       if(mode == i)
         options[i] = items[i][1];
       else
         options[i] = items[i][0];
     }
 
-    options[4] = "   --Go Back.";
-    options[5] = NULL;
+    options[6] = "   --Go Back.";
+    options[7] = NULL;
     
     int chosen_item = get_menu_selection(title_headers, options, 1, mode);
-    if (chosen_item == 4) {
+    if (chosen_item == 6) {
       res=0;
       break;
     }
@@ -532,6 +550,7 @@ show_config_bootmode(void) {
 int
 set_bootmode(int mode) {
   switch (mode) {
+
     case MODE_2NDINIT:
       ui_print("Set " ITEM_2NDINIT "....");
       return bootmode_write("2nd-init");
@@ -541,6 +560,14 @@ set_bootmode(int mode) {
     case MODE_NORMAL:
       ui_print("Set " ITEM_NORMAL "....");
       return bootmode_write("normal");
+
+    case MODE_2NDINIT_D:
+      ui_print("Set " ITEM_2NDINIT_D "....");
+      return bootmode_write("2nd-init adb");
+    case MODE_2NDBOOT_D:
+      ui_print("Set " ITEM_2NDBOOT_D "....");
+      return bootmode_write("2nd-boot adb");
+
     case MODE_BOOTMENU:
       ui_print("Set BootMenu....");
       return bootmode_write("bootmenu");
@@ -573,6 +600,10 @@ get_bootmode(void) {
       return MODE_BOOTMENU;
     else if (0 == strcmp(mode, "recovery"))
       return MODE_RECOVERY;
+    else if (0 == strcmp(mode, "2nd-init adb"))
+      return MODE_2NDINIT_D;
+    else if (0 == strcmp(mode, "2nd-boot adb"))
+      return MODE_2NDBOOT_D;
   }
 
   f = fopen(FILE_DEFAULTBOOTMODE, "r");
@@ -587,8 +618,10 @@ get_bootmode(void) {
       return MODE_2NDINIT;
     else if (0 == strcmp(mode, ITEM_2NDBOOT))
       return MODE_2NDBOOT;
-    else if (0 == strcmp(mode, ITEM_2NDADB))
-      return MODE_2NDADB;
+    else if (0 == strcmp(mode, ITEM_2NDINIT_D))
+      return MODE_2NDINIT_D;
+    else if (0 == strcmp(mode, ITEM_2NDBOOT_D))
+      return MODE_2NDBOOT_D;
     else
       return MODE_BOOTMENU;
   }
