@@ -19,7 +19,7 @@
 #include "bootmenu_ui.h"
 #include "common.h"
 
-char* MENU_HEADERS[] = { "By ga1axy@rvr.kr and XDA CyanogenDefy Team",
+char* MENU_HEADERS[] = { "By CyanogenDefy Team and ga1axy",
                          "",
                          "Use Volume Up/Down to highlight",
                          "Power Key to select..",

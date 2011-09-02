@@ -156,13 +156,13 @@ ui_finish(void) {
 static int
 wait_key(int key) {
   int i;
-  int result = INSTALL_SUCCESS;
+  int result = 0;
 
   evt_init();
   ui_clear_key_queue();
   for(i=0; i < 100; i++) {
     if(ui_key_pressed(key)) {
-      result = INSTALL_ERROR;
+      result = 1;
     }
     else {
       usleep(15000); //15ms
@@ -174,7 +174,8 @@ wait_key(int key) {
 
 static int
 run_bootmenu(void) {
-  int mode, status = INSTALL_SUCCESS;
+  int defmode, mode, status = INSTALL_CORRUPT;
+  int adb_started = 0;
   time_t start = time(NULL);
 
   LOGI("Starting bootmenu on %s", ctime(&start));
@@ -186,55 +187,75 @@ run_bootmenu(void) {
 
     led_alert("blue", ENABLE);
 
+    defmode = get_default_bootmode();
     mode = get_bootmode();
 
-    // dont wait if bootmenu or recovery mode asked
-    if (mode != MODE_BOOTMENU && mode != MODE_RECOVERY) {
-      status = wait_key(KEY_VOLUMEDOWN);
+    // only start adb if usb is connected
+    if (usb_connected()) {
+      if (mode == int_mode("2nd-init-adb") || mode == int_mode("2nd-boot-adb")) {
+         exec_script(FILE_ADBD, DISABLE);
+         adb_started = 1;
+      } else if (mode != int_mode("bootmenu") && wait_key(KEY_VOLUMEDOWN)) {
+         status = INSTALL_ERROR;
+         mode = int_mode("bootmenu");
+      }
     }
 
-    if (status != INSTALL_ERROR) {
+    // dont wait if bootmenu or recovery mode asked
+    if (mode != int_mode("bootmenu") && mode != int_mode("recovery")) {
+        status = (wait_key(KEY_VOLUMEDOWN) ? INSTALL_SUCCESS : INSTALL_ERROR);
+    }
 
-      switch (mode) {
-        case MODE_2NDINIT:
+    // on timeout
+    if (status == INSTALL_ERROR) {
+
+      if (mode == int_mode("bootmenu")) {
+          led_alert("blue", DISABLE);
+          status = INSTALL_ERROR;
+      }
+      else if (mode == int_mode("2nd-init") || mode == int_mode("2nd-init-adb")) {
           led_alert("blue", DISABLE);
           led_alert("green", ENABLE);
           snd_init(DISABLE);
           led_alert("green", DISABLE);
-          break;
-
-        case MODE_2NDBOOT:
+          status = INSTALL_SUCCESS;
+      }
+      else if (mode == int_mode("2nd-boot") || mode == int_mode("2nd-boot-adb")) {
           led_alert("blue", DISABLE);
           led_alert("red", ENABLE);
           snd_boot(DISABLE);
           led_alert("red", DISABLE);
-          break;
-
-        case MODE_BOOTMENU:
-          led_alert("blue", DISABLE);
-          status = INSTALL_ERROR;
-          break;
-
-        case MODE_RECOVERY:
+          status = INSTALL_SUCCESS;
+      }
+      else if (mode == int_mode("recovery")) {
           led_alert("blue", DISABLE);
           exec_script(FILE_STABLERECOVERY, DISABLE);
           status = INSTALL_SUCCESS;
-          break;
       }
+
     }
 
     if (status != INSTALL_SUCCESS) {
-      ui_init();
-      ui_set_background(BACKGROUND_DEFAULT);
 
-      ui_show_text(ENABLE);
-      LOGI("Start Android BootMenu....\n");
+        ui_init();
+        ui_set_background(BACKGROUND_DEFAULT);
+        ui_show_text(ENABLE);
+        LOGI("Start Android BootMenu....\n");
 
-      main_headers = prepend_title((const char**)MENU_HEADERS);
-      prompt_and_wait();
-      free(main_headers);
+        main_headers = prepend_title((const char**)MENU_HEADERS);
 
-      ui_finish();
+        if (!adb_started && usb_connected()) {
+            ui_print("Usb connected, starting adb...\n\n");
+            ui_print("Current mode: %s\n", str_mode(mode));
+            ui_print("Default mode: %s\n", str_mode(defmode));
+            //ui_print("Battery level: %d %%\n", battery_level());
+            exec_script(FILE_ADBD, DISABLE);
+        }
+
+        prompt_and_wait();
+        free(main_headers);
+
+        ui_finish();
     }
 
   }
@@ -261,7 +282,15 @@ main(int argc, char **argv) {
     return result;
   }
   else if (argc >= 3 && 0 == strcmp(argv[2], "pds")) {
+    //kept for compat, must use postbootmenu
     real_execute(argc, argv);
+    exec_script(FILE_OVERCLOCK, DISABLE);
+    result = exec_script(FILE_POST_MENU, DISABLE);
+    bypass_sign("no");
+    sync();
+    return result;
+  }
+  else if (argc >= 2 && 0 == strcmp(argv[1], "postbootmenu")) {
     exec_script(FILE_OVERCLOCK, DISABLE);
     result = exec_script(FILE_POST_MENU, DISABLE);
     bypass_sign("no");
