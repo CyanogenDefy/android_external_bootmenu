@@ -245,13 +245,18 @@ run_bootmenu(void) {
 
         main_headers = prepend_title((const char**)MENU_HEADERS);
 
+        /* can be buggy
+
         if (!adb_started && usb_connected()) {
             ui_print("Usb connected, starting adb...\n\n");
-            ui_print("Current mode: %s\n", str_mode(mode));
-            ui_print("Default mode: %s\n", str_mode(defmode));
             //ui_print("Battery level: %d %%\n", battery_level());
             exec_script(FILE_ADBD, DISABLE);
         }
+        */
+
+        ui_print("Current mode: %s\n", str_mode(mode));
+        ui_print("Default mode: %s\n", str_mode(defmode));
+
 
         prompt_and_wait();
         free(main_headers);
