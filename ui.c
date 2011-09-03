@@ -379,7 +379,9 @@ void evt_init(void)
 
 void evt_exit(void)
 {
-    ev_exit();
+    if (evt_enabled) {
+      ev_exit();
+    }
     evt_enabled = 0;
 }
 

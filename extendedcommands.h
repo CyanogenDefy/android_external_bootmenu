@@ -1,3 +1,6 @@
+static const char *FILE_PRE_MENU = "/system/bootmenu/script/pre_bootmenu.sh";
+static const char *FILE_POST_MENU = "/system/bootmenu/script/post_bootmenu.sh";
+
 static const char *FILE_2NDINIT   = "/system/bootmenu/script/2nd-init.sh";
 static const char *FILE_2NDBOOT   = "/system/bootmenu/script/2nd-boot.sh";
 static const char *FILE_ADBD      = "/system/bootmenu/script/adbd.sh";
@@ -40,6 +43,7 @@ int show_menu_tools(void);
 int show_menu_recovery(void);
 
 int usb_connected(void);
+int adb_started(void);
 int battery_level(void);
 
 int snd_init(int ui);
@@ -49,7 +53,7 @@ int show_config_bootmode(void);
 
 int get_default_bootmode(void);
 int set_default_bootmode(int mode);
-int get_bootmode(void);
+int get_bootmode(int clean);
 
 int bootmode_write(const char* str);
 int next_bootmode_write(const char* str);
