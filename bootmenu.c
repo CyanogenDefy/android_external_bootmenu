@@ -296,7 +296,7 @@ main(int argc, char **argv) {
     sync();
     return result;
   }
-  else if (argc >= 2 && 0 == strcmp(argv[1], "postbootmenu")) {
+  else if (argc == 2 && 0 == strcmp(argv[1], "postbootmenu")) {
     exec_script(FILE_OVERCLOCK, DISABLE);
     result = exec_script(FILE_POST_MENU, DISABLE);
     bypass_sign("no");
