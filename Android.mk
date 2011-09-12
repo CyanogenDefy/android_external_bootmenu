@@ -13,7 +13,7 @@ bootmenu_sources := \
     default_bootmenu_ui.c \
     ui.c \
 
-BOOTMENU_VERSION:=1.0.4
+BOOTMENU_VERSION:=1.0.5
 
 ifeq ($(BOARD_USES_BOOTMENU),true)
 

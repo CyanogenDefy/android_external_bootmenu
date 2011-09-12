@@ -100,7 +100,6 @@ enum {
   ENABLE
 };
 
-
 //turn on/off a led
 int led_alert(const char* color, int value);
 

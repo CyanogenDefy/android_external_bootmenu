@@ -64,6 +64,9 @@ int device_wipe_data();
 #define HIGHLIGHT_UP        -2
 #define HIGHLIGHT_DOWN      -3
 #define SELECT_ITEM         -4
+#define ACTION_CANCEL       -5
+
+#define GO_BACK            127
 
 #define ITEM_BOOT            0
 #define ITEM_SYSTEM          1

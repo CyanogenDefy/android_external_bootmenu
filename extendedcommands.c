@@ -129,6 +129,10 @@ int show_menu_boot(void) {
 
     chosen_item = get_menu_selection(title_headers, items, 1, 0);
 
+    if (chosen_item == GO_BACK) {
+        goto exit_loop;
+    }
+
     //Submenu: select default mode
     if (chosen_item == 0) {
         show_config_bootmode();
