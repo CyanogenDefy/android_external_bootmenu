@@ -108,6 +108,9 @@ int get_menu_selection(char** headers, char** items, int menu_only,
           case SELECT_ITEM:
             chosen_item = selected;
             break;
+          case ACTION_CANCEL:
+            chosen_item = GO_BACK;
+            break;
           case NO_ACTION:
             break;
       }
@@ -143,8 +146,10 @@ static void prompt_and_wait() {
     // device-specific code may take some action here.  It may
     // return one of the core actions handled in the switch
     // statement below.
-    chosen_item = device_perform_action(chosen_item);
-    switch (chosen_item) {
+
+    if (chosen_item >= 0 && chosen_item <= ITEM_REBOOT) {
+
+      switch (chosen_item) {
       case ITEM_BOOT:
         if (show_menu_boot()) return; else break;
 #if FULL_VERSION
@@ -163,8 +168,10 @@ static void prompt_and_wait() {
         sync();
         reboot(RB_AUTOBOOT);
         return;
+      }
+
+      select = chosen_item;
     }
-    select = chosen_item;
   }
 }
 
@@ -284,9 +291,8 @@ static int run_bootmenu(void) {
         }
         */
 
-        ui_print("Current mode: %s\n", str_mode(mode));
+        //ui_print("Current mode: %s\n", str_mode(mode));
         ui_print("Default mode: %s\n", str_mode(defmode));
-
 
         prompt_and_wait();
         free_menu_headers(main_headers);
