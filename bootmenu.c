@@ -157,9 +157,6 @@ static int compare_string(const void* a, const void* b) {
   return strcmp(*(const char**)a, *(const char**)b);
 }
 
-// Text for menu items, defined in separate file
-extern char* MENU_ITEMS[];
-
 /**
  * prompt_and_wait()
  *
