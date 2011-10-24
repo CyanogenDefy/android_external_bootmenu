@@ -19,23 +19,12 @@
 #include "bootmenu_ui.h"
 #include "common.h"
 
-char* MENU_HEADERS[] = { "By CyanogenDefy Team and ga1axy",
-                         "",
-                         "Use Volume Up/Down to highlight",
-                         "Power Key to select..",
-                         "",
-                         NULL };
-
-char* MENU_ITEMS[] = { "  +Boot -->",
-                       #if FULL_VERSION
-                       "  +System -->",
-                       #else
-                       "  +CPU Settings -->",
-                       #endif
-                       "  +Recovery -->",
-                       "  +Tools -->",
-                       "  [Reboot System]",
-                       NULL };
+char* MENU_HEADERS[] = {
+    "Use volume buttons to highlight,",
+    "Power key to select..",
+    "",
+    NULL
+};
 
 int device_toggle_display(volatile char* key_pressed, int key_code) {
     return key_code == KEY_HOME;
