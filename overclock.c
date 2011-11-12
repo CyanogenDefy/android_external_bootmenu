@@ -23,7 +23,7 @@
 #include "minui/minui.h"
 #include "bootmenu_ui.h"
 
-#undef USE_4_CLOCK_LEVELS
+#define USE_4_CLOCK_LEVELS
 
 struct overclock_config
 {
@@ -37,12 +37,12 @@ struct overclock_config overclock[] = {
   { "scaling", 2 },
   { "clk1", 300 },
   { "clk2", 600 },
-  { "clk3", 1000 },
-  { "clk4", 1100 },
-  { "vsel1", 33 },
-  { "vsel2", 48 },
-  { "vsel3", 58 },
-  { "vsel4", 62 },
+  { "clk3", 800 },
+  { "clk4", 1000 },
+  { "vsel1", 18 },
+  { "vsel2", 30 },
+  { "vsel3", 40 },
+  { "vsel4", 52 },
   { "con_up_threshold", 80 },
   { "con_down_threshold", 20 },
   { "con_freq_step", 5 },
