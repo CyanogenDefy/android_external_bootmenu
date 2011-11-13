@@ -27,7 +27,8 @@ char* MENU_HEADERS[] = {
 };
 
 int device_toggle_display(volatile char* key_pressed, int key_code) {
-    return key_code == KEY_HOME;
+    //return key_code == KEY_HOME;
+    return 0;
 }
 
 int device_reboot_now(volatile char* key_pressed, int key_code) {
