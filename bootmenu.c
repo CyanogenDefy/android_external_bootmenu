@@ -50,7 +50,7 @@ enum {
 char* MENU_ITEMS[] = {
     "  [Reboot]",
     "  +Boot -->",
-#if FULL_VERSION
+#if STOCK_VERSION
     "  +System -->",
 #else
     "  +CPU Settings -->",
@@ -183,7 +183,7 @@ static void prompt_and_wait() {
       case ITEM_BOOT:
         if (show_menu_boot()) return;
         break;
-#if FULL_VERSION
+#if STOCK_VERSION
       case ITEM_SYSTEM:
         if (show_menu_system()) return;
         break;
@@ -304,6 +304,13 @@ static int run_bootmenu(void) {
           exec_script(FILE_STABLERECOVERY, DISABLE);
           status = BUTTON_TIMEOUT;
       }
+#if STOCK_VERSION
+      else if (mode == int_mode("normal") || mode == int_mode("normal-adb")) {
+          led_alert("blue", DISABLE);
+          stk_boot(DISABLE);
+          status = BUTTON_TIMEOUT;
+      }
+#endif
 
     }
 

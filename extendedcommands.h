@@ -3,6 +3,7 @@ static const char *FILE_POST_MENU = "/system/bootmenu/script/post_bootmenu.sh";
 
 static const char *FILE_2NDINIT   = "/system/bootmenu/script/2nd-init.sh";
 static const char *FILE_2NDBOOT   = "/system/bootmenu/script/2nd-boot.sh";
+static const char *FILE_STOCK     = "/system/bootmenu/script/stock.sh";
 static const char *FILE_ADBD      = "/system/bootmenu/script/adbd.sh";
 static const char *FILE_SDCARD    = "/system/bootmenu/script/sdcard.sh";
 static const char *FILE_CDROM     = "/system/bootmenu/script/cdrom.sh";
@@ -25,14 +26,14 @@ static const char *SYS_POWER_CONNECTED  = "/sys/class/power_supply/ac/online";
 static const char *SYS_USB_CONNECTED    = "/sys/class/power_supply/usb/online";
 static const char *SYS_BATTERY_LEVEL    = "/sys/class/power_supply/battery/charge_counter"; // content: 0 to 100
 
-#if FULL_VERSION
+#if STOCK_VERSION
 
 static const char *FILE_ROOT      = "/system/bootmenu/script/unroot.sh";
 static const char *FILE_UNINSTALL = "/system/bootmenu/script/uninstall.sh";
 
 int show_menu_system(void);
 
-#endif //FULL_VERSION
+#endif //STOCK_VERSION
 
 int int_mode(char* mode);
 const char* str_mode(int mode);
@@ -48,6 +49,7 @@ int battery_level(void);
 
 int snd_init(int ui);
 int snd_boot(int ui);
+int stk_boot(int ui);
 
 int show_config_bootmode(void);
 

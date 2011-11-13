@@ -181,7 +181,7 @@ menu_overclock_status(int intl_value) {
   return mode;
 }
 
-#if FULL_VERSION
+#if STOCK_VERSION
 # define MENU_SYSTEM " System -->"
 # define MENU_OVERCLOCK " Overclock -->"
 #else
@@ -203,22 +203,23 @@ menu_overclock_scaling(void) {
   static char** title_headers = NULL;
 
   if (title_headers == NULL) {
-    char* headers[] = { " #" MENU_SYSTEM MENU_OVERCLOCK " Scaling -->",
-                        "",
-                        NULL };
-
+    char* headers[] = {
+      " #" MENU_SYSTEM MENU_OVERCLOCK " Scaling -->",
+      "",
+      NULL
+    };
     title_headers = prepend_title((const char**)headers);
   }
 
   char* items[7][2] = {
-                        { "  *[Conservative]", "   [Conservative]" },
-                        { "  *[Interactive]", "   [Interactive]" },
-                        { "  *[Ondemand]", "   [Ondemand]" },
-                        { "  *[Performance]", "   [Performance]" },
-                        { "  *[Powersave]", "   [Powersave]" },
-                        { "  *[Smartass]", "   [Smartass]" },
-                        { "  *[Userspace]", "   [Userspace]" },
-                      };
+    { "  *[Conservative]", "   [Conservative]" },
+    { "  *[Interactive]",  "   [Interactive]" },
+    { "  *[Ondemand]",     "   [Ondemand]" },
+    { "  *[Performance]",  "   [Performance]" },
+    { "  *[Powersave]",    "   [Powersave]" },
+    { "  *[Smartass]",     "   [Smartass]" },
+    { "  *[Userspace]",    "   [Userspace]" },
+  };
 
   for (;;) {
 
@@ -232,7 +233,6 @@ menu_overclock_scaling(void) {
       else
         options[i] = items[i][1];
     }
-    
     options[7] = "   --Go Back.";
     options[8] = NULL;
 
