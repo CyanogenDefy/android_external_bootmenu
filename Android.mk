@@ -34,6 +34,7 @@ endif
 ################################
 
 ifeq ($(BOARD_USES_BOOTMENU),true)
+ifneq ($(BUILD_BOOTMENU_STANDALONE),1)
 
 include $(CLEAR_VARS)
 
@@ -62,6 +63,7 @@ include $(BUILD_EXECUTABLE)
 
 include $(call all-makefiles-under,$(bootmenu_local_path))
 
+endif
 endif # BOARD_USES_BOOTMENU
 
 
