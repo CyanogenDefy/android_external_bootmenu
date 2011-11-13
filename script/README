@@ -1,0 +1,8 @@
+
+These scripts are present as "sample" scripts.
+
+They are used by the bootmenu binary for differents actions
+and should be placed and tuned in your device tree and blobs.
+
+Good luck :) Tanguy
+

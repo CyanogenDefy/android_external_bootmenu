@@ -8,11 +8,6 @@ export PATH=/sbin:/system/xbin:/system/bin
 
 ######## Main Script
 
-
-#echo 1 > /sys/class/leds/green/brightness
-#usleep 100000
-#echo 0 > /sys/class/leds/green/brightness
-
 mount -o remount,rw /
 rm -f /*.rc
 cp -r -f /system/bootmenu/2nd-init/* /
@@ -32,7 +27,7 @@ umount /data
 
 ######## Cleanup
 
-rm /sbin/lsof
+rm -f /sbin/lsof
 
 ## busybox cleanup..
 for cmd in $(/sbin/busybox --list); do

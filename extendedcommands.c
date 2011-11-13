@@ -32,7 +32,7 @@
 
 //#define DEBUG_ALLOC
 
-#define MODES_COUNT 7
+#define MODES_COUNT 8
 const char* modes[] = {
   "bootmenu",
   "2nd-init",
@@ -40,6 +40,7 @@ const char* modes[] = {
   "normal",
   "2nd-init-adb",
   "2nd-boot-adb",
+  "normal-adb",
   "recovery",
 };
 
@@ -49,6 +50,7 @@ const char* modes[] = {
 #define LABEL_NORMAL     "Stock"
 #define LABEL_2NDINIT_D  "2nd-init + adb"
 #define LABEL_2NDBOOT_D  "2nd-boot + adb"
+#define LABEL_NORMAL_D   "Stock + adb"
 
 /**
  * int_mode()
@@ -86,11 +88,12 @@ int show_menu_boot(void) {
   #define BOOT_NORMAL     3
   #define BOOT_2NDINIT_D  4
   #define BOOT_2NDBOOT_D  5
+  #define BOOT_NORMAL_D   6
 
-  #define BOOT_FBTEST     6
-  #define BOOT_EVTTEST    7
-  #define BOOT_PNGTEST    8
-  #define BOOT_TEST       9
+  #define BOOT_FBTEST     7
+  #define BOOT_EVTTEST    8
+  #define BOOT_PNGTEST    9
+  #define BOOT_TEST      10
 
   int status, res = 0;
   const char* headers[] = {
@@ -100,13 +103,14 @@ int show_menu_boot(void) {
   };
   char** title_headers = prepend_title(headers);
 
-  char* items[11] = {
+  char* items[12] = {
         "  +Set Default: [" LABEL_2NDINIT_D "] -->",
         "  [" LABEL_2NDINIT "]",
         "  [" LABEL_2NDBOOT "]",
         "  [" LABEL_NORMAL "]",
         "  [" LABEL_2NDINIT_D "]",
         "  [" LABEL_2NDBOOT_D "]",
+        "  [" LABEL_NORMAL_D "]",
 
 #ifdef DEBUG_ALLOC
         "  [test fb]",
@@ -163,6 +167,24 @@ int show_menu_boot(void) {
         status = snd_boot(ENABLE);
         return (status == 0);
     }
+#if STOCK_VERSION
+    else if (chosen_item == BOOT_NORMAL) {
+        free_menu_headers(title_headers);
+        if (next_bootmode_write( str_mode(chosen_item) ) != 0) {
+            //write error
+            continue;
+        }
+        sync();
+        reboot(RB_AUTOBOOT);
+        goto exit_loop;
+    }
+    else if (chosen_item == BOOT_NORMAL_D) {
+        free_menu_headers(title_headers);
+        if (usb_connected() && !adb_started()) exec_script(FILE_ADBD, ENABLE);
+        status = stk_boot(ENABLE);
+        return (status == 0);
+    }
+#endif
     else
     switch (chosen_item) {
 #ifdef DEBUG_ALLOC
@@ -251,6 +273,13 @@ int show_config_bootmode(void) {
       res=1;
       break;
     }
+#if !STOCK_VERSION
+    if (chosen_item == BOOT_NORMAL || chosen_item == BOOT_NORMAL_D) {
+      //back, disable stock boot in CyanogenMod
+      res=1;
+      break;
+    }
+#endif
     if (set_default_bootmode(chosen_item) == 0) {
       ui_print("Done..\n");
       continue;
@@ -266,7 +295,7 @@ int show_config_bootmode(void) {
 }
 
 
-#if FULL_VERSION
+#if STOCK_VERSION
 
 /**
  * show_menu_system()
@@ -331,7 +360,7 @@ int show_menu_system(void) {
   free_menu_headers(title_headers);
   return 0;
 }
-#endif //#if FULL_VERSION
+#endif //#if STOCK_VERSION
 
 
 /**
@@ -415,9 +444,14 @@ int show_menu_tools(void) {
  */
 int show_menu_recovery(void) {
 
+#if STOCK_VERSION
+  #define RECOVERY_CUSTOM     0
+  #define RECOVERY_STOCK      1
+#else
   #define RECOVERY_CUSTOM     0
   #define RECOVERY_STABLE     1
   #define RECOVERY_STOCK      2
+#endif
 
   int status, res=0;
   char** args;
@@ -431,9 +465,13 @@ int show_menu_recovery(void) {
   char** title_headers = prepend_title(headers);
 
   char* items[] =  {
-        "  [Latest Recovery]",
+        "  [Custom Recovery]",
+#if STOCK_VERSION
+        "  [Stock Recovery]",
+#else
         "  [Stable Recovery]",
         "  [Stock Recovery]",
+#endif
         "  --Go Back.",
         NULL
   };
@@ -442,18 +480,20 @@ int show_menu_recovery(void) {
 
   switch (chosen_item) {
     case RECOVERY_CUSTOM:
-      ui_print("Starting Dev Recovery..\n");
+      ui_print("Starting Recovery..\n");
       ui_print("This can take a couple of seconds.\n");
       status = exec_script(FILE_CUSTOMRECOVERY, ENABLE);
       if (!status) res = 1;
       break;
 
+#if !STOCK_VERSION
     case RECOVERY_STABLE:
       ui_print("Starting Recovery..\n");
       ui_print("This can take a couple of seconds.\n");
       status = exec_script(FILE_STABLERECOVERY, ENABLE);
       if (!status) res = 1;
       break;
+#endif
 
     case RECOVERY_STOCK:
       ui_print("Rebooting to Stock Recovery..\n");
@@ -468,33 +508,6 @@ int show_menu_recovery(void) {
   free_menu_headers(title_headers);
   return res;
 }
-
-/* made in sdcard.sh
-
-#ifndef BOARD_UMS_LUNFILE
-#define BOARD_UMS_LUNFILE  "/sys/devices/platform/usb_mass_storage/lun0/file"
-#endif
-
-int
-mount_usb_storage(void) {
-
-  char usb_storage[] = BOARD_UMS_LUNFILE;
-  char part[] = "/dev/block/mmcblk0p1";
-
-  FILE* f = fopen(usb_storage, "w");
-
-  if (f != NULL) {
-    fprintf(f, "%s", part);
-    fclose(f);
-    return 0;
-  } else {
-    ui_print("Unable to write to usb_mass_storage lun file (%s)", strerror(errno));
-  }
-  return 1;
-}
-
-*/
-
 
 /**
  * snd_init()
@@ -571,6 +584,35 @@ int snd_boot(int ui) {
   bypass_sign("no");
   return 0;
 }
+
+#if STOCK_VERSION
+/**
+ * stk_boot()
+ *
+ */
+int stk_boot(int ui) {
+  int status;
+  int i;
+
+  bypass_sign("yes");
+
+  if (ui)
+    ui_print("Start " LABEL_NORMAL " boot....\n");
+  else
+    LOGI("Start " LABEL_NORMAL " boot....\n");
+
+  status = exec_script(FILE_STOCK, ui);
+  if (status) {
+    return -1;
+    bypass_sign("no");
+  }
+
+  usleep(1000000);
+
+  bypass_sign("no");
+  return 0;
+}
+#endif
 
 // --------------------------------------------------------
 
