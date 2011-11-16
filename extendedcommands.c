@@ -374,10 +374,20 @@ int show_menu_tools(void) {
 #define TOOL_CDROM   3
 #define TOOL_SYSTEM  4
 #define TOOL_DATA    5
+#define TOOL_NATIVE  6
+
+#define TOOL_UMOUNT  8
+
+
+#ifndef BOARD_MMC_DEVICE
+#define BOARD_MMC_DEVICE "/dev/block/mmcblk1"
+#endif
 
   int status;
 
   const char* headers[] = {
+        " Don't forget to stop the share after use !",
+        "",
         " # Tools -->",
         "",
         NULL
@@ -391,7 +401,9 @@ int show_menu_tools(void) {
         "  [Share Drivers]",
         "  [Share system]",
         "  [Share data]",
+        "  [Share MMC - Dangerous!]",
         "",
+        "  [Stop USB Share]",
         "  --Go Back.",
         NULL
   };
@@ -405,9 +417,16 @@ int show_menu_tools(void) {
       ui_print("Done..\n");
       break;
 
+    case TOOL_UMOUNT:
+      ui_print("Stopping USB share...");
+      sync();
+      mount_usb_storage("");
+      status = set_usb_device_mode("acm");
+      ui_print("Done..\n");
+      break;
+
     case TOOL_USB:
       ui_print("USB Mass Storage....");
-      //mount_usb_storage();
       status = exec_script(FILE_SDCARD, ENABLE);
       ui_print("Done..\n");
       break;
@@ -427,6 +446,17 @@ int show_menu_tools(void) {
     case TOOL_DATA:
       ui_print("Sharing Data Partition....");
       status = exec_script(FILE_DATA, ENABLE);
+      ui_print("Done..\n");
+      break;
+
+    case TOOL_NATIVE:
+      ui_print("Set USB device mode...");
+      sync();
+      mount_usb_storage(BOARD_MMC_DEVICE);
+      usleep(500*1000);
+      status = set_usb_device_mode("msc_adb");
+      usleep(500*1000);
+      mount_usb_storage(BOARD_MMC_DEVICE);
       ui_print("Done..\n");
       break;
 
@@ -921,5 +951,50 @@ int battery_level() {
     fclose(f);
   }
   return state;
+}
+
+
+/**
+ * Native USB ADB Mode Switch
+ *
+ */
+int set_usb_device_mode(const char* mode) {
+
+  #ifndef BOARD_USB_MODESWITCH
+  #define BOARD_USB_MODESWITCH  "/dev/usb_device_mode"
+  #endif
+
+  FILE* f = fopen(BOARD_USB_MODESWITCH, "w");
+  if (f != NULL) {
+
+    fprintf(f, "%s", mode);
+    fclose(f);
+
+    LOGI("set usb mode=%s\n", mode);
+    return 0;
+
+  } else {
+    fprintf(stdout, "E:Can't open " BOARD_USB_MODESWITCH " (%s)\n", strerror(errno));
+    return errno;
+  }
+}
+
+int mount_usb_storage(const char* part) {
+
+  #ifndef BOARD_UMS_LUNFILE
+  #define BOARD_UMS_LUNFILE  "/sys/devices/platform/usb_mass_storage/lun0/file"
+  #endif
+
+  FILE* f = fopen(BOARD_UMS_LUNFILE, "w");
+  if (f != NULL) {
+
+    fprintf(f, "%s", part);
+    fclose(f);
+    return 0;
+
+  } else {
+    ui_print("E:Unable to write to lun file (%s)", strerror(errno));
+    return errno;
+  }
 }
 

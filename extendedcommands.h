@@ -66,3 +66,7 @@ int bypass_check(void);
 int exec_and_wait(char** argp);
 int exec_script(const char* filename, int ui);
 int real_execute(int r_argc, char** r_argv);
+
+int set_usb_device_mode(const char *mode);
+int mount_usb_storage(const char *part);
+
