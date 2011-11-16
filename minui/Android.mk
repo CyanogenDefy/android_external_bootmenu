@@ -1,3 +1,5 @@
+ifeq ($(BOARD_USES_BOOTMENU),true)
+
 ifeq ($(TARGET_ARCH),arm)
 ifneq ($(TARGET_SIMULATOR),true)
 
@@ -12,10 +14,11 @@ LOCAL_C_INCLUDES +=\
     external/zlib
 
 LOCAL_MODULE := libminui_bm
-LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE_TAGS := eng
 
 include $(BUILD_STATIC_LIBRARY)
 
 endif
 endif
 
+endif #BOARD_USES_BOOTMENU
