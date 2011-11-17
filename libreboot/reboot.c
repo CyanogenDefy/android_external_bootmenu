@@ -1,7 +1,10 @@
-#include <reboot/reboot.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/reboot.h>
+
+//to check:
+//#include "cutils/android_reboot.h"
+//android_reboot(int cmd, int flags, char *arg);
 
 #ifdef RECOVERY_SHELL
 #include "../../../bootable/recovery/libcrecovery/common.h"
