@@ -12,10 +12,11 @@ bootmenu_sources := \
     extendedcommands.c \
     overclock.c \
     bootmenu.c \
+    checkup.c \
     default_bootmenu_ui.c \
     ui.c \
 
-BOOTMENU_VERSION:=1.0.8
+BOOTMENU_VERSION:=1.0.9
 
 # Variables available in BoardConfig.mk related to mount devices
 EXTRA_CFLAGS :=
