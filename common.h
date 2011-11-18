@@ -106,4 +106,7 @@ int led_alert(const char* color, int value);
 int  ui_create_bitmaps();
 void ui_free_bitmaps();
 
+//checkup
+int checkup_report(void);
+
 #endif  // RECOVERY_COMMON_H

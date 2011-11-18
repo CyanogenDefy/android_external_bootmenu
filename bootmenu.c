@@ -335,6 +335,8 @@ static int run_bootmenu(void) {
         //ui_print("Current mode: %s\n", str_mode(mode));
         ui_print("Default mode: %s\n", str_mode(defmode));
 
+        checkup_report();
+
         prompt_and_wait();
         free_menu_headers(main_headers);
 
