@@ -1,8 +1,5 @@
 ifeq ($(BOARD_USES_BOOTMENU),true)
 
-ifeq ($(TARGET_ARCH),arm)
-ifneq ($(TARGET_SIMULATOR),true)
-
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
@@ -16,9 +13,15 @@ LOCAL_C_INCLUDES +=\
 LOCAL_MODULE := libminui_bm
 LOCAL_MODULE_TAGS := eng
 
-include $(BUILD_STATIC_LIBRARY)
+ifeq ($(TARGET_RECOVERY_PIXEL_FORMAT),"RGBX_8888")
+    LOCAL_CFLAGS += -DPIXELS_RGBX
+endif
 
+ifeq ($(TARGET_RECOVERY_PIXEL_FORMAT),"BGRA_8888")
+    LOCAL_CFLAGS += -DPIXELS_BGRA
 endif
-endif
+
+
+include $(BUILD_STATIC_LIBRARY)
 
 endif #BOARD_USES_BOOTMENU
