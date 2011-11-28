@@ -28,6 +28,9 @@
 #if defined(PIXELS_BGRA)
 # define PIXEL_FORMAT GGL_PIXEL_FORMAT_BGRA_8888
 # define PIXEL_SIZE   4
+#elif defined(PIXELS_RGBA)
+# define PIXEL_FORMAT GGL_PIXEL_FORMAT_RGBA_8888
+# define PIXEL_SIZE   4
 #elif defined(PIXELS_RGBX)
 # define PIXEL_FORMAT GGL_PIXEL_FORMAT_RGBX_8888
 # define PIXEL_SIZE   4
@@ -103,6 +106,15 @@ static int get_framebuffer(GGLSurface *fb)
       vi.green.offset   = 16;
       vi.green.length   = 8;
       vi.blue.offset    = 24;
+      vi.blue.length    = 8;
+      vi.transp.offset  = 0;
+      vi.transp.length  = 8;
+    } else if (PIXEL_FORMAT == GGL_PIXEL_FORMAT_RGBA_8888) {
+      vi.red.offset     = 24;
+      vi.red.length     = 8;
+      vi.green.offset   = 16;
+      vi.green.length   = 8;
+      vi.blue.offset    = 8;
       vi.blue.length    = 8;
       vi.transp.offset  = 0;
       vi.transp.length  = 8;
@@ -234,7 +246,7 @@ static void set_final_framebuffer(unsigned n)
     if (n > 1) return;
     vi.yres_virtual = vi.yres * 2;
     vi.yoffset = n * vi.yres;
-    vi.bits_per_pixel = PIXEL_SIZE * 8;
+    vi.bits_per_pixel = 32;
     if (ioctl(gr_fb_fd, FBIOPUT_VSCREENINFO, &vi) < 0) {
         perror("active fb swap failed");
     }
@@ -260,10 +272,17 @@ void gr_color(unsigned char r, unsigned char g, unsigned char b, unsigned char a
 {
     GGLContext *gl = gr_context;
     GGLint color[4];
+#ifndef PIXELS_BGRA
     color[0] = ((r << 8) | r) + 1;
     color[1] = ((g << 8) | g) + 1;
     color[2] = ((b << 8) | b) + 1;
     color[3] = ((a << 8) | a) + 1;
+#else
+    color[2] = ((r << 8) | r) + 1;
+    color[1] = ((g << 8) | g) + 1;
+    color[0] = ((b << 8) | b) + 1;
+    color[3] = ((a << 8) | a) + 1;
+#endif
     gl->color4xv(gl, color);
 }
 
