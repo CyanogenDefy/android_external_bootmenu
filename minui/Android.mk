@@ -11,7 +11,7 @@ LOCAL_C_INCLUDES +=\
     external/zlib
 
 LOCAL_MODULE := libminui_bm
-LOCAL_MODULE_TAGS := eng
+LOCAL_MODULE_TAGS := eng debug
 
 ifeq ($(TARGET_RECOVERY_PIXEL_FORMAT),"RGBA_8888")
     LOCAL_CFLAGS += -DPIXELS_RGBA
