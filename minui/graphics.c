@@ -34,6 +34,10 @@
 #elif defined(PIXELS_RGBX)
 # define PIXEL_FORMAT GGL_PIXEL_FORMAT_RGBX_8888
 # define PIXEL_SIZE   4
+#elif defined(PIXELS_BGR_16BPP)
+# define PIXEL_FORMAT GGL_PIXEL_FORMAT_RGB_565
+# define PIXEL_SIZE   2
+# define COLORS_REVERSED
 #else
 # define PIXEL_FORMAT GGL_PIXEL_FORMAT_RGB_565
 # define PIXEL_SIZE   2
@@ -84,6 +88,9 @@ static int get_framebuffer(GGLSurface *fb)
     int fd;
     void *bits;
 
+    memset(&vi, 0, sizeof(vi));
+    memset(&fi, 0, sizeof(fi));
+
     // init to prevent free of random address
     fb->data = NULL;
 
@@ -100,40 +107,44 @@ static int get_framebuffer(GGLSurface *fb)
     }
 
     vi.bits_per_pixel = PIXEL_SIZE * 8;
-    if (PIXEL_FORMAT == GGL_PIXEL_FORMAT_BGRA_8888) {
-      vi.red.offset     = 8;
+    if (PIXEL_FORMAT == GGL_PIXEL_FORMAT_RGBA_8888 
+     || PIXEL_FORMAT == GGL_PIXEL_FORMAT_RGBX_8888) {
+      vi.red.offset     = 0;
       vi.red.length     = 8;
-      vi.green.offset   = 16;
+      vi.green.offset   = 8;
       vi.green.length   = 8;
-      vi.blue.offset    = 24;
+      vi.blue.offset    = 16;
       vi.blue.length    = 8;
-      vi.transp.offset  = 0;
-      vi.transp.length  = 8;
-    } else if (PIXEL_FORMAT == GGL_PIXEL_FORMAT_RGBA_8888) {
-      vi.red.offset     = 24;
+      vi.transp.offset  = 24;
+      vi.transp.length  = 8; //RGBX use 0xFF on Alpha
+    } else if (PIXEL_FORMAT == GGL_PIXEL_FORMAT_BGRA_8888) {
+      // defy cm7 config
+      vi.blue.offset    = 0;
+      vi.blue.length    = 8;
+      vi.green.offset   = 8;
+      vi.green.length   = 8;
+      vi.red.offset     = 16;
       vi.red.length     = 8;
-      vi.green.offset   = 16;
-      vi.green.length   = 8;
-      vi.blue.offset    = 8;
-      vi.blue.length    = 8;
-      vi.transp.offset  = 0;
+      vi.transp.offset  = 24;
       vi.transp.length  = 8;
-    } else if (PIXEL_FORMAT == GGL_PIXEL_FORMAT_RGBX_8888) {
-      vi.red.offset     = 24;
-      vi.red.length     = 8;
-      vi.green.offset   = 16;
-      vi.green.length   = 8;
-      vi.blue.offset    = 8;
-      vi.blue.length    = 8;
-      vi.transp.offset  = 0;
-      vi.transp.length  = 8;
-    } else { /* RGB565*/
+    } else {
+#ifdef COLORS_REVERSED
+      // BGR565 16-bits
+      vi.blue.offset    = 0;
+      vi.blue.length    = 5;
+      vi.green.offset   = 5;
+      vi.green.length   = 6;
       vi.red.offset     = 11;
+      vi.red.length     = 5;
+#else
+      // RGB565 16-bits
+      vi.red.offset     = 0;
       vi.red.length     = 5;
       vi.green.offset   = 5;
       vi.green.length   = 6;
-      vi.blue.offset    = 0;
+      vi.blue.offset    = 11;
       vi.blue.length    = 5;
+#endif
       vi.transp.offset  = 0;
       vi.transp.length  = 0;
     }
@@ -177,7 +188,7 @@ static int get_framebuffer(GGLSurface *fb)
     fb->width = vi.xres;
     fb->height = vi.yres;
     fb->stride = fi.line_length/PIXEL_SIZE;
-    fb->data = (void*) (((unsigned) bits) + vi.yres * vi.xres * PIXEL_SIZE);
+    fb->data = (void*) (((unsigned) bits) + vi.yres * fi.line_length);
     fb->format = PIXEL_FORMAT;
     gr_fb_clear(fb);
 
@@ -225,8 +236,9 @@ static void get_memory_surface(GGLSurface* ms) {
     ms->version = sizeof(GGLSurface);
     ms->width = vi.xres;
     ms->height = vi.yres;
-    ms->stride = vi.xres;
-    ms->data = malloc(vi.xres * vi.yres * PIXEL_SIZE);
+    //ms->stride = vi.xres;
+    ms->stride = fi.line_length/PIXEL_SIZE;
+    ms->data = malloc(vi.yres * fi.line_length);
     ms->format = PIXEL_FORMAT;
 }
 
@@ -241,12 +253,16 @@ static void set_active_framebuffer(unsigned n)
     }
 }
 
-static void set_final_framebuffer(unsigned n)
+// on bootmenu exit, set this final config
+static void set_final_framebuffer(void)
 {
-    if (n > 1) return;
-    vi.yres_virtual = vi.yres * 2;
-    vi.yoffset = n * vi.yres;
     vi.bits_per_pixel = 32;
+    vi.yres_virtual = vi.yres;
+    vi.xres_virtual = vi.xres;
+    vi.yoffset = 0;
+    vi.vmode = FB_VMODE_NONINTERLACED;
+    vi.hsync_len = vi.vsync_len = 0;
+
     if (ioctl(gr_fb_fd, FBIOPUT_VSCREENINFO, &vi) < 0) {
         perror("active fb swap failed");
     }
@@ -262,7 +278,7 @@ void gr_flip(void)
     /* copy data from the in-memory surface to the buffer we're about
      * to make active. */
     memcpy(gr_framebuffer[gr_active_fb].data, gr_mem_surface.data,
-           vi.xres * vi.yres * PIXEL_SIZE);
+           vi.yres * fi.line_length);
 
     /* inform the display driver */
     set_active_framebuffer(gr_active_fb);
@@ -272,16 +288,13 @@ void gr_color(unsigned char r, unsigned char g, unsigned char b, unsigned char a
 {
     GGLContext *gl = gr_context;
     GGLint color[4];
-#ifndef PIXELS_BGRA
     color[0] = ((r << 8) | r) + 1;
     color[1] = ((g << 8) | g) + 1;
     color[2] = ((b << 8) | b) + 1;
     color[3] = ((a << 8) | a) + 1;
-#else
-    color[2] = ((r << 8) | r) + 1;
-    color[1] = ((g << 8) | g) + 1;
+#ifdef COLORS_REVERSED
     color[0] = ((b << 8) | b) + 1;
-    color[3] = ((a << 8) | a) + 1;
+    color[2] = ((r << 8) | r) + 1;
 #endif
     gl->color4xv(gl, color);
 }
@@ -469,7 +482,7 @@ void gr_exit(void)
     gr_fb_clear(&gr_framebuffer[0]);
     gr_fb_clear(&gr_framebuffer[1]);
 
-    set_final_framebuffer(0);
+    set_final_framebuffer();
 
     // free memory buffer
     if (gr_mem_surface.version == sizeof(GGLSurface) && gr_mem_surface.data) {
@@ -481,6 +494,8 @@ void gr_exit(void)
 
     // un-mmap
     release_framebuffer(gr_framebuffer);
+
+    gglUninit(gr_context);
 }
 
 int gr_fb_width(void)
