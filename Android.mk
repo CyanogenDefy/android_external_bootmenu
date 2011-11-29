@@ -13,7 +13,7 @@ bootmenu_sources := \
     default_bootmenu_ui.c \
     ui.c \
 
-BOOTMENU_VERSION:=1.0.9
+BOOTMENU_VERSION:=1.1.0
 
 # Variables available in BoardConfig.mk related to mount devices
 EXTRA_CFLAGS :=
