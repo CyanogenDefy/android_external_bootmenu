@@ -23,7 +23,7 @@
 #include "minui/minui.h"
 #include "bootmenu_ui.h"
 
-#undef USE_4_CLOCK_LEVELS
+def USE_4_CLOCK_LEVELS
 
 struct overclock_config
 {
