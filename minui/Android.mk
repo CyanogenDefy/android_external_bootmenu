@@ -14,9 +14,9 @@ LOCAL_MODULE := libminui_bm
 LOCAL_MODULE_TAGS := eng debug
 
 # Defy use this :
-#ifeq ($(TARGET_RECOVERY_PIXEL_FORMAT),"BGRA_8888")
+ifeq ($(TARGET_RECOVERY_PIXEL_FORMAT),"BGRA_8888")
     LOCAL_CFLAGS += -DPIXELS_BGRA
-#endif
+endif
 
 ifeq ($(TARGET_RECOVERY_PIXEL_FORMAT),"RGBA_8888")
     LOCAL_CFLAGS += -DPIXELS_RGBA
@@ -26,7 +26,7 @@ ifeq ($(TARGET_RECOVERY_PIXEL_FORMAT),"RGBX_8888")
     LOCAL_CFLAGS += -DPIXELS_RGBX
 endif
 
-# Reversed 16bits RGB 
+# Reversed 16bits RGB (ics software gralloc)
 #LOCAL_CFLAGS += PIXELS_BGR_16BPP
 
 include $(BUILD_STATIC_LIBRARY)

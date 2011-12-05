@@ -107,7 +107,7 @@ static int get_framebuffer(GGLSurface *fb)
     }
 
     vi.bits_per_pixel = PIXEL_SIZE * 8;
-    if (PIXEL_FORMAT == GGL_PIXEL_FORMAT_RGBA_8888 
+    if (PIXEL_FORMAT == GGL_PIXEL_FORMAT_RGBA_8888
      || PIXEL_FORMAT == GGL_PIXEL_FORMAT_RGBX_8888) {
       vi.red.offset     = 0;
       vi.red.length     = 8;
