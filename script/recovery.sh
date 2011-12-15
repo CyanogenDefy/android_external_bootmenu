@@ -3,13 +3,9 @@
 ######## BootMenu Script
 ######## Execute [Latest Recovery] Menu
 
-
-export PATH=/sbin:/system/xbin:/system/bin
+source /system/bootmenu/script/_config.sh
 
 ######## Main Script
-
-PART_DATA=/dev/block/mmcblk1p25
-PART_SYSTEM=/dev/block/mmcblk1p21
 
 ## /tmp folder can be a link to /data/tmp, bad thing !
 [ -L /tmp ] && rm /tmp
@@ -58,7 +54,7 @@ killall adbd
 if [ ! -f /tmp/pds.img ]; then
     umount /pds 2>/dev/null
     # make a copy of pds in /data
-    dd if=/dev/block/mmcblk1p7 of=/tmp/pds.img bs=4096
+    dd if=$PART_PDS of=/tmp/pds.img bs=4096
 fi
 
 # setup the fake pds mount point for recovery
