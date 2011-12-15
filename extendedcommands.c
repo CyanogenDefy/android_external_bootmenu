@@ -32,7 +32,7 @@
 
 //#define DEBUG_ALLOC
 
-#define MODES_COUNT 8
+#define MODES_COUNT 9
 const char* modes[] = {
   "bootmenu",
   "2nd-init",
@@ -42,6 +42,7 @@ const char* modes[] = {
   "2nd-boot-adb",
   "normal-adb",
   "recovery",
+  "shell",
 };
 
 //user friendly menu labels
