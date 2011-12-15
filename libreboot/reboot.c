@@ -58,6 +58,14 @@ int reboot_wrapper(const char* reason) {
 			printf("reboot: %s->bootmenu " BOARD_BOOTMODE_CONFIG_FILE " (%d)\n", reason, ret);
 			#endif
 
+                } else if ( 0 == strncmp(reason,"shell",5) ) {
+
+                        // override bootloader reboot mode
+                        ret = fputs("shell", config);
+
+                        #if (DBG_LEVEL)
+                        printf("reboot: %s->shell " BOARD_BOOTMODE_CONFIG_FILE " (%d)\n", reason, ret);
+                        #endif
 
 		} else {
 

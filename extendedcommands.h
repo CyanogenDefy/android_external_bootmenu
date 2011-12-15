@@ -1,5 +1,9 @@
 #define BM_ROOTDIR "/system/bootmenu"
 
+#ifndef BOARD_BOOTMODE_CONFIG_FILE
+#define BOARD_BOOTMODE_CONFIG_FILE "/cache/recovery/bootmode.conf"
+#endif
+
 static const char *FILE_PRE_MENU  = BM_ROOTDIR "/script/pre_bootmenu.sh";
 static const char *FILE_POST_MENU = BM_ROOTDIR "/script/post_bootmenu.sh";
 
@@ -20,10 +24,8 @@ static const char *FILE_STABLERECOVERY  = BM_ROOTDIR "/script/recovery_stable.sh
 static const char *FILE_BOOTMODE_CLEAN  = BM_ROOTDIR "/script/bootmode_clean.sh";
 
 static const char *FILE_DEFAULTBOOTMODE = BM_ROOTDIR "/config/default_bootmode.conf";
-static const char *FILE_BOOTMODE        = "/cache/recovery/bootmode.conf";
+static const char *FILE_BOOTMODE        = BOARD_BOOTMODE_CONFIG_FILE;
 static const char *FILE_BYPASS          = "/data/.bootmenu_bypass";
-
-static const char *FILE_STOCKRECOVERY   = "/system/bin/reboot";
 
 static const char *SYS_POWER_CONNECTED  = "/sys/class/power_supply/ac/online";
 static const char *SYS_USB_CONNECTED    = "/sys/class/power_supply/usb/online";

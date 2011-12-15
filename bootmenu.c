@@ -265,8 +265,11 @@ static int run_bootmenu(void) {
     // get and clean one shot bootmode (or default)
     mode = get_bootmode(1);
 
-    // dont wait if bootmenu or recovery mode asked
-    if (mode != int_mode("bootmenu") && mode != int_mode("recovery")) {
+    if (mode == int_mode("bootmenu")
+     || mode == int_mode("recovery")
+     || mode == int_mode("shell")) {
+        // dont wait if these modes are asked
+    } else {
         status = (wait_key(KEY_VOLUMEDOWN) ? BUTTON_PRESSED : BUTTON_TIMEOUT);
     }
 
@@ -304,6 +307,11 @@ static int run_bootmenu(void) {
           exec_script(FILE_STABLERECOVERY, DISABLE);
           status = BUTTON_TIMEOUT;
       }
+      else if (mode == int_mode("shell")) {
+          led_alert("blue", DISABLE);
+          exec_script(FILE_ADBD, DISABLE);
+          status = BUTTON_PRESSED;
+      }
 #if STOCK_VERSION
       else if (mode == int_mode("normal") || mode == int_mode("normal-adb")) {
           led_alert("blue", DISABLE);
@@ -332,8 +340,15 @@ static int run_bootmenu(void) {
         }
         */
 
-        //ui_print("Current mode: %s\n", str_mode(mode));
         ui_print("Default mode: %s\n", str_mode(defmode));
+
+        if (mode == int_mode("shell")) {
+            ui_print("\n");
+            ui_print("Current mode: %s\n", str_mode(mode));
+            if (!usb_connected()) {
+                ui_print(" But USB is not connected !\n");
+            }
+        }
 
         checkup_report();
 
@@ -374,7 +389,7 @@ int main(int argc, char **argv) {
     return result;
   }
   else if (argc >= 3 && 0 == strcmp(argv[2], "pds")) {
-    //kept for stock rom compatibility, cyanogen use postbootmenu
+    //kept for stock rom compatibility, please use postbootmenu
     real_execute(argc, argv);
     exec_script(FILE_OVERCLOCK, DISABLE);
     result = exec_script(FILE_POST_MENU, DISABLE);
