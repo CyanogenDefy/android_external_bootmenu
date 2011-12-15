@@ -1,8 +1,5 @@
 ifeq ($(BOARD_USES_BOOTMENU),true)
 
-ifeq ($(TARGET_ARCH),arm)
-ifneq ($(TARGET_SIMULATOR),true)
-
 ################################
 
 LOCAL_PATH := $(call my-dir)
@@ -12,10 +9,11 @@ bootmenu_sources := \
     extendedcommands.c \
     overclock.c \
     bootmenu.c \
+    checkup.c \
     default_bootmenu_ui.c \
     ui.c \
 
-BOOTMENU_VERSION:=1.0.8
+BOOTMENU_VERSION:=1.1.0
 
 # Variables available in BoardConfig.mk related to mount devices
 EXTRA_CFLAGS :=
@@ -41,7 +39,7 @@ ifneq ($(BUILD_BOOTMENU_STANDALONE),1)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := bootmenu
-LOCAL_MODULE_TAGS := eng
+LOCAL_MODULE_TAGS := eng debug
 
 LOCAL_SRC_FILES := $(bootmenu_sources)
 
@@ -72,7 +70,7 @@ LOCAL_PATH := $(bootmenu_local_path)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := Bootmenu
-LOCAL_MODULE_TAGS := eng
+LOCAL_MODULE_TAGS := eng debug
 
 LOCAL_SRC_FILES := $(bootmenu_sources)
 
@@ -101,7 +99,5 @@ include $(call all-makefiles-under,$(bootmenu_local_path))
 
 #####################################
 
-endif # !TARGET_SIMULATOR
-endif # TARGET_ARCH arm
 endif #BOARD_USES_BOOTMENU
 

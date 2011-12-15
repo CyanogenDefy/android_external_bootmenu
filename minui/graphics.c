@@ -25,6 +25,24 @@
 #include <linux/kd.h>
 #include <pixelflinger/pixelflinger.h>
 
+#if defined(PIXELS_BGRA)
+# define PIXEL_FORMAT GGL_PIXEL_FORMAT_BGRA_8888
+# define PIXEL_SIZE   4
+#elif defined(PIXELS_RGBA)
+# define PIXEL_FORMAT GGL_PIXEL_FORMAT_RGBA_8888
+# define PIXEL_SIZE   4
+#elif defined(PIXELS_RGBX)
+# define PIXEL_FORMAT GGL_PIXEL_FORMAT_RGBX_8888
+# define PIXEL_SIZE   4
+#elif defined(PIXELS_BGR_16BPP)
+# define PIXEL_FORMAT GGL_PIXEL_FORMAT_RGB_565
+# define PIXEL_SIZE   2
+# define COLORS_REVERSED
+#else
+# define PIXEL_FORMAT GGL_PIXEL_FORMAT_RGB_565
+# define PIXEL_SIZE   2
+#endif
+
 #include "font_10x18.h"
 #include "minui.h"
 
@@ -37,7 +55,7 @@ typedef struct {
     unsigned ascent;
 } GRFont;
 
-static GRFont *gr_font = 0;
+static GRFont *gr_font = NULL;
 static GGLContext *gr_context = 0;
 static GGLSurface gr_font_texture;
 static GGLSurface gr_framebuffer[2];
@@ -52,11 +70,12 @@ static int gr_vt_mode = -1;
 
 static struct fb_var_screeninfo vi;
 static struct fb_fix_screeninfo fi;
+
 static unsigned mmap_len = 0;
 
 static void gr_fb_clear(GGLSurface *fb) {
     if (fb && fb->data) {
-        memset(fb->data, 0, vi.yres * vi.xres * 2);
+        memset(fb->data, 0, vi.yres * vi.xres * PIXEL_SIZE);
     }
 }
 
@@ -69,6 +88,9 @@ static int get_framebuffer(GGLSurface *fb)
     int fd;
     void *bits;
 
+    memset(&vi, 0, sizeof(vi));
+    memset(&fi, 0, sizeof(fi));
+
     // init to prevent free of random address
     fb->data = NULL;
 
@@ -78,13 +100,61 @@ static int get_framebuffer(GGLSurface *fb)
         return -1;
     }
 
-    if (ioctl(fd, FBIOGET_FSCREENINFO, &fi) < 0) {
+    if (ioctl(fd, FBIOGET_VSCREENINFO, &vi) < 0) {
         perror("failed to get fb0 info");
         close(fd);
         return -1;
     }
 
-    if (ioctl(fd, FBIOGET_VSCREENINFO, &vi) < 0) {
+    vi.bits_per_pixel = PIXEL_SIZE * 8;
+    if (PIXEL_FORMAT == GGL_PIXEL_FORMAT_RGBA_8888 
+     || PIXEL_FORMAT == GGL_PIXEL_FORMAT_RGBX_8888) {
+      vi.red.offset     = 0;
+      vi.red.length     = 8;
+      vi.green.offset   = 8;
+      vi.green.length   = 8;
+      vi.blue.offset    = 16;
+      vi.blue.length    = 8;
+      vi.transp.offset  = 24;
+      vi.transp.length  = 8; //RGBX use 0xFF on Alpha
+    } else if (PIXEL_FORMAT == GGL_PIXEL_FORMAT_BGRA_8888) {
+      // defy cm7 config
+      vi.blue.offset    = 0;
+      vi.blue.length    = 8;
+      vi.green.offset   = 8;
+      vi.green.length   = 8;
+      vi.red.offset     = 16;
+      vi.red.length     = 8;
+      vi.transp.offset  = 24;
+      vi.transp.length  = 8;
+    } else {
+#ifdef COLORS_REVERSED
+      // BGR565 16-bits
+      vi.blue.offset    = 0;
+      vi.blue.length    = 5;
+      vi.green.offset   = 5;
+      vi.green.length   = 6;
+      vi.red.offset     = 11;
+      vi.red.length     = 5;
+#else
+      // RGB565 16-bits
+      vi.red.offset     = 0;
+      vi.red.length     = 5;
+      vi.green.offset   = 5;
+      vi.green.length   = 6;
+      vi.blue.offset    = 11;
+      vi.blue.length    = 5;
+#endif
+      vi.transp.offset  = 0;
+      vi.transp.length  = 0;
+    }
+    if (ioctl(fd, FBIOPUT_VSCREENINFO, &vi) < 0) {
+        perror("failed to put fb0 info");
+        close(fd);
+        return -1;
+    }
+
+    if (ioctl(fd, FBIOGET_FSCREENINFO, &fi) < 0) {
         perror("failed to get fb0 info");
         close(fd);
         return -1;
@@ -107,9 +177,9 @@ static int get_framebuffer(GGLSurface *fb)
     fb->version = sizeof(*fb);
     fb->width = vi.xres;
     fb->height = vi.yres;
-    fb->stride = vi.xres;
+    fb->stride = fi.line_length/PIXEL_SIZE;
     fb->data = bits;
-    fb->format = GGL_PIXEL_FORMAT_RGB_565;
+    fb->format = PIXEL_FORMAT;
     gr_fb_clear(fb);
 
     fb++;
@@ -117,9 +187,9 @@ static int get_framebuffer(GGLSurface *fb)
     fb->version = sizeof(*fb);
     fb->width = vi.xres;
     fb->height = vi.yres;
-    fb->stride = vi.xres;
-    fb->data = (void*) (((unsigned) bits) + vi.yres * vi.xres * 2);
-    fb->format = GGL_PIXEL_FORMAT_RGB_565;
+    fb->stride = fi.line_length/PIXEL_SIZE;
+    fb->data = (void*) (((unsigned) bits) + vi.yres * fi.line_length);
+    fb->format = PIXEL_FORMAT;
     gr_fb_clear(fb);
 
     return fd;
@@ -166,9 +236,10 @@ static void get_memory_surface(GGLSurface* ms) {
     ms->version = sizeof(GGLSurface);
     ms->width = vi.xres;
     ms->height = vi.yres;
-    ms->stride = vi.xres;
-    ms->data = malloc(vi.xres * vi.yres * 2);
-    ms->format = GGL_PIXEL_FORMAT_RGB_565;
+    //ms->stride = vi.xres;
+    ms->stride = fi.line_length/PIXEL_SIZE;
+    ms->data = malloc(vi.yres * fi.line_length);
+    ms->format = PIXEL_FORMAT;
 }
 
 static void set_active_framebuffer(unsigned n)
@@ -176,18 +247,22 @@ static void set_active_framebuffer(unsigned n)
     if (n > 1) return;
     vi.yres_virtual = vi.yres * 2;
     vi.yoffset = n * vi.yres;
-    vi.bits_per_pixel = 16;
+    vi.bits_per_pixel = PIXEL_SIZE * 8;
     if (ioctl(gr_fb_fd, FBIOPUT_VSCREENINFO, &vi) < 0) {
         perror("active fb swap failed");
     }
 }
 
-static void set_final_framebuffer(unsigned n)
+// on bootmenu exit, set this final config
+static void set_final_framebuffer(void)
 {
-    if (n > 1) return;
-    vi.yres_virtual = vi.yres * 2;
-    vi.yoffset = n * vi.yres;
     vi.bits_per_pixel = 32;
+    vi.yres_virtual = vi.yres;
+    vi.xres_virtual = vi.xres;
+    vi.yoffset = 0;
+    vi.vmode = FB_VMODE_NONINTERLACED;
+    vi.hsync_len = vi.vsync_len = 0;
+
     if (ioctl(gr_fb_fd, FBIOPUT_VSCREENINFO, &vi) < 0) {
         perror("active fb swap failed");
     }
@@ -203,7 +278,7 @@ void gr_flip(void)
     /* copy data from the in-memory surface to the buffer we're about
      * to make active. */
     memcpy(gr_framebuffer[gr_active_fb].data, gr_mem_surface.data,
-           vi.xres * vi.yres * 2);
+           vi.yres * fi.line_length);
 
     /* inform the display driver */
     set_active_framebuffer(gr_active_fb);
@@ -217,12 +292,24 @@ void gr_color(unsigned char r, unsigned char g, unsigned char b, unsigned char a
     color[1] = ((g << 8) | g) + 1;
     color[2] = ((b << 8) | b) + 1;
     color[3] = ((a << 8) | a) + 1;
+#ifdef COLORS_REVERSED
+    color[0] = ((b << 8) | b) + 1;
+    color[2] = ((r << 8) | r) + 1;
+#endif
     gl->color4xv(gl, color);
 }
 
 int gr_measure(const char *s)
 {
     return gr_font->cwidth * strlen(s);
+}
+
+void gr_font_size(int *x, int *y)
+{
+    if (gr_font != NULL) {
+        *x = gr_font->cwidth;
+        *y = gr_font->cheight;
+    }
 }
 
 int gr_text(int x, int y, const char *s)
@@ -317,6 +404,16 @@ static void gr_init_font(void)
     gr_font->ascent = font.cheight - 2;
 }
 
+static void gr_free_font(void)
+{
+    // free font allocs
+    if (gr_fontmem) free(gr_fontmem);
+    gr_fontmem = NULL;
+
+    if (gr_font) free(gr_font);
+    gr_font = NULL;
+}
+
 int gr_init(void)
 {
     gglInit(&gr_context);
@@ -362,6 +459,9 @@ int gr_init(void)
     gl->enable(gl, GGL_BLEND);
     gl->blendFunc(gl, GGL_SRC_ALPHA, GGL_ONE_MINUS_SRC_ALPHA);
 
+    gr_fb_blank(true);
+    gr_fb_blank(false);
+
     return 0;
 }
 
@@ -382,21 +482,20 @@ void gr_exit(void)
     gr_fb_clear(&gr_framebuffer[0]);
     gr_fb_clear(&gr_framebuffer[1]);
 
-    set_final_framebuffer(0);
+    set_final_framebuffer();
 
     // free memory buffer
     if (gr_mem_surface.version == sizeof(GGLSurface) && gr_mem_surface.data) {
         free(gr_mem_surface.data);
         gr_mem_surface.data = NULL;
     }
-    // free font memory
-    if (gr_fontmem) {
-        free(gr_fontmem);
-        gr_fontmem = NULL;
-    }
+
+    gr_free_font();
 
     // un-mmap
     release_framebuffer(gr_framebuffer);
+
+    gglUninit(gr_context);
 }
 
 int gr_fb_width(void)
@@ -413,3 +512,13 @@ gr_pixel *gr_fb_data(void)
 {
     return (unsigned short *) gr_mem_surface.data;
 }
+
+void gr_fb_blank(bool blank)
+{
+    int ret;
+
+    ret = ioctl(gr_fb_fd, FBIOBLANK, blank ? FB_BLANK_POWERDOWN : FB_BLANK_UNBLANK);
+    if (ret < 0)
+        perror("ioctl(): blank");
+}
+
