@@ -19,9 +19,11 @@ SCALING_GOVERNOR="/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
 # clk1 300
 # clk2 600
 # clk3 1000
+# clk4 1100
 # vsel1 30
-# vsel2 46
-# vsel3 58
+# vsel2 48
+# vsel3 52
+# vsel4 62
 # con_up_threshold 80
 # con_down_threshold 20
 # con_freq_step 5
@@ -145,14 +147,16 @@ set_scaling()
 
 set_overclock_table()
 {
-  echo "$vsel3" > /proc/overclock/max_vsel
-  echo "${clk3}000" > /proc/overclock/max_rate
+  echo "$vsel4" > /proc/overclock/max_vsel
+  echo "${clk4}000" > /proc/overclock/max_rate
+  echo "4 ${clk4}000000 $vsel4" > /proc/overclock/mpu_opps
   echo "3 ${clk3}000000 $vsel3" > /proc/overclock/mpu_opps
   echo "2 ${clk2}000000 $vsel2" > /proc/overclock/mpu_opps
   echo "1 ${clk1}000000 $vsel1" > /proc/overclock/mpu_opps
-  echo "0 ${clk3}000" > /proc/overclock/freq_table
-  echo "1 ${clk2}000" > /proc/overclock/freq_table
-  echo "2 ${clk1}000" > /proc/overclock/freq_table
+  echo "0 ${clk4}000" > /proc/overclock/freq_table
+  echo "1 ${clk3}000" > /proc/overclock/freq_table
+  echo "2 ${clk2}000" > /proc/overclock/freq_table
+  echo "3 ${clk1}000" > /proc/overclock/freq_table
 }
 
 #############################################################
