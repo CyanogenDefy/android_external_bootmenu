@@ -13,7 +13,7 @@ bootmenu_sources := \
     default_bootmenu_ui.c \
     ui.c \
 
-BOOTMENU_VERSION:=1.1.0
+BOOTMENU_VERSION:=1.1.1
 
 # Variables available in BoardConfig.mk related to mount devices
 EXTRA_CFLAGS :=
@@ -29,6 +29,11 @@ ifdef BOARD_SDCARD_DEVICE_SECONDARY
 endif
 ifdef BOARD_SDEXT_DEVICE
     EXTRA_CFLAGS += -DSDEXT_DEVICE=\"$(BOARD_SDEXT_DEVICE)\"
+endif
+
+# one-shot reboot mode file location
+ifneq ($(BOARD_BOOTMODE_CONFIG_FILE),)
+    EXTRA_CFLAGS += -DBOARD_BOOTMODE_CONFIG_FILE=\"$(BOARD_BOOTMODE_CONFIG_FILE)\"
 endif
 
 ######################################
