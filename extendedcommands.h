@@ -1,26 +1,31 @@
-static const char *FILE_PRE_MENU = "/system/bootmenu/script/pre_bootmenu.sh";
-static const char *FILE_POST_MENU = "/system/bootmenu/script/post_bootmenu.sh";
+#define BM_ROOTDIR "/system/bootmenu"
 
-static const char *FILE_2NDINIT   = "/system/bootmenu/script/2nd-init.sh";
-static const char *FILE_2NDBOOT   = "/system/bootmenu/script/2nd-boot.sh";
-static const char *FILE_STOCK     = "/system/bootmenu/script/stock.sh";
-static const char *FILE_ADBD      = "/system/bootmenu/script/adbd.sh";
-static const char *FILE_SDCARD    = "/system/bootmenu/script/sdcard.sh";
-static const char *FILE_CDROM     = "/system/bootmenu/script/cdrom.sh";
-static const char *FILE_SYSTEM    = "/system/bootmenu/script/system.sh";
-static const char *FILE_DATA      = "/system/bootmenu/script/data.sh";
+#ifndef BOARD_BOOTMODE_CONFIG_FILE
+#define BOARD_BOOTMODE_CONFIG_FILE "/cache/recovery/bootmode.conf"
+#endif
 
-static const char *FILE_OVERCLOCK = "/system/bootmenu/script/overclock.sh";
-static const char *FILE_OVERCLOCK_CONF  = "/system/bootmenu/config/overclock.conf";
+static const char *FILE_PRE_MENU  = BM_ROOTDIR "/script/pre_bootmenu.sh";
+static const char *FILE_POST_MENU = BM_ROOTDIR "/script/post_bootmenu.sh";
 
-static const char *FILE_CUSTOMRECOVERY  = "/system/bootmenu/script/recovery.sh";
-static const char *FILE_STABLERECOVERY  = "/system/bootmenu/script/recovery_stable.sh";
-static const char *FILE_BOOTMODE_CLEAN  = "/system/bootmenu/script/bootmode_clean.sh";
+static const char *FILE_2NDINIT   = BM_ROOTDIR "/script/2nd-init.sh";
+static const char *FILE_2NDBOOT   = BM_ROOTDIR "/script/2nd-boot.sh";
+static const char *FILE_STOCK     = BM_ROOTDIR "/script/stock.sh";
+static const char *FILE_ADBD      = BM_ROOTDIR "/script/adbd.sh";
+static const char *FILE_SDCARD    = BM_ROOTDIR "/script/sdcard.sh";
+static const char *FILE_CDROM     = BM_ROOTDIR "/script/cdrom.sh";
+static const char *FILE_SYSTEM    = BM_ROOTDIR "/script/system.sh";
+static const char *FILE_DATA      = BM_ROOTDIR "/script/data.sh";
 
-static const char *FILE_DEFAULTBOOTMODE = "/system/bootmenu/config/default_bootmode.conf";
-static const char *FILE_BOOTMODE        = "/cache/recovery/bootmode.conf";
+static const char *FILE_OVERCLOCK       = BM_ROOTDIR "/script/overclock.sh";
+static const char *FILE_OVERCLOCK_CONF  = BM_ROOTDIR "/config/overclock.conf";
+
+static const char *FILE_CUSTOMRECOVERY  = BM_ROOTDIR "/script/recovery.sh";
+static const char *FILE_STABLERECOVERY  = BM_ROOTDIR "/script/recovery_stable.sh";
+static const char *FILE_BOOTMODE_CLEAN  = BM_ROOTDIR "/script/bootmode_clean.sh";
+
+static const char *FILE_DEFAULTBOOTMODE = BM_ROOTDIR "/config/default_bootmode.conf";
+static const char *FILE_BOOTMODE        = BOARD_BOOTMODE_CONFIG_FILE;
 static const char *FILE_BYPASS          = "/data/.bootmenu_bypass";
-static const char *FILE_STOCKRECOVERY   = "/system/bin/reboot";
 
 static const char *SYS_POWER_CONNECTED  = "/sys/class/power_supply/ac/online";
 static const char *SYS_USB_CONNECTED    = "/sys/class/power_supply/usb/online";
@@ -28,8 +33,8 @@ static const char *SYS_BATTERY_LEVEL    = "/sys/class/power_supply/battery/charg
 
 #if STOCK_VERSION
 
-static const char *FILE_ROOT      = "/system/bootmenu/script/unroot.sh";
-static const char *FILE_UNINSTALL = "/system/bootmenu/script/uninstall.sh";
+static const char *FILE_ROOT      = BM_ROOTDIR "/script/unroot.sh";
+static const char *FILE_UNINSTALL = BM_ROOTDIR "/script/uninstall.sh";
 
 int show_menu_system(void);
 
