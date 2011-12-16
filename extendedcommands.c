@@ -379,7 +379,6 @@ int show_menu_tools(void) {
 
 #define TOOL_UMOUNT  8
 
-
 #ifndef BOARD_MMC_DEVICE
 #define BOARD_MMC_DEVICE "/dev/block/mmcblk1"
 #endif

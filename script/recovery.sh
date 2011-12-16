@@ -26,18 +26,36 @@ mkdir /sdcard
 chmod 755 /sbin
 chmod 755 /res
 
-cp -r -f /system/bootmenu/recovery/res/* /res/
-cp -p -f /system/bootmenu/recovery/sbin/* /sbin/
-cp -p -f /system/bootmenu/script/recoveryexit.sh /sbin/
+cp -r -f $BM_ROOTDIR/recovery/res/* /res/
+cp -p -f $BM_ROOTDIR/recovery/sbin/* /sbin/
+cp -p -f $BM_ROOTDIR/script/recoveryexit.sh /sbin/
+
+if [ ! -f /sbin/recovery ]; then
+    ln -s /sbin/recovery_stable /sbin/recovery
+fi
+
+cd /sbin
+ln -s recovery edify
+ln -s recovery setprop
+ln -s recovery dump_image
+ln -s recovery erase_image
+ln -s recovery flash_image
+ln -s recovery mkyaffs2image
+ln -s recovery unyaffs
+ln -s recovery nandroid
+ln -s recovery volume
+ln -s recovery reboot
 
 chmod +rx /sbin/*
 
 rm -f /sbin/postrecoveryboot.sh
 
-cp /system/bootmenu/recovery/recovery.fstab /etc/recovery.fstab
+if [ ! -e /etc/recovery.fstab ]; then
+    cp $BM_ROOTDIR/recovery/recovery.fstab /etc/recovery.fstab
+fi
 
 # for ext3 format
-cp /system/bootmenu/config/mke2fs.conf /etc/
+cp $BM_ROOTDIR/config/mke2fs.conf /etc/
 
 mkdir -p /cache/recovery
 touch /cache/recovery/command
@@ -47,18 +65,15 @@ touch /tmp/recovery.log
 
 killall adbd
 
-# load overclock settings to reduce heat and battery use
-/system/bootmenu/script/overclock.sh
-
 # mount image of pds, for backup purpose (4MB)
-if [ ! -f /tmp/pds.img ]; then
-    umount /pds 2>/dev/null
-    # make a copy of pds in /data
-    dd if=$PART_PDS of=/tmp/pds.img bs=4096
+[ ! -d /data/data ] && mount -t $FS_DATA -o rw,noatime,nodiratime,errors=continue $PART_DATA /data
+if [ ! -f /data/pds.img ]; then
+    /system/etc/init.d/04pdsbackup
+    umount /pds
+    losetup -d /dev/block/loop7
 fi
-
-# setup the fake pds mount point for recovery
-if [ -f /tmp/pds.img ]; then
+cp /data/pds.img /tmp/pds.img
+if [ -f /tmp/pds.img ] ; then
     mkdir -p /pds
     umount /pds 2>/dev/null
     losetup -d /dev/block/loop7 2>/dev/null
@@ -70,8 +85,7 @@ ps | grep -v grep | grep adbd
 ret=$?
 
 if [ ! $ret -eq 0 ]; then
-   # chmod 755 /system/bootmenu/script/adbd.sh
-   # /system/bootmenu/script/adbd.sh
+   # $BM_ROOTDIR/script/adbd.sh
 
    # don't use adbd here, will load many android process which locks /system
    killall adbd
@@ -83,7 +97,7 @@ fi
 umount /system
 
 usleep 50000
-mount -t ext3 -o rw,noatime,nodiratime $PART_SYSTEM /system
+mount -t $FS_SYSTEM -o rw,noatime,nodiratime $PART_SYSTEM /system
 
 # retry without type & options if not mounted
 [ ! -f /system/build.prop ] && mount -o rw $PART_SYSTEM /system
@@ -96,21 +110,14 @@ echo 0 > /sys/class/leds/blue/brightness
 
 #############################
 
-# turn on button backlight (back button is used in CWM Recovery 3.x)
-echo 1 > /sys/class/leds/button-backlight/brightness
-
-
 /sbin/recovery
 
 
 # Post Recovery (back to bootmenu)
 
-# bootmenu support buttons too...
-# echo 0 > /sys/class/leds/button-backlight/brightness
-
 # remount system & data if unmounted
-[ ! -d /data/data ] &&         mount -t ext3 -o rw,noatime,nodiratime,errors=continue $PART_DATA /data
-[ ! -f /system/build.prop ] && mount -t ext3 -o rw,noatime,nodiratime,errors=continue $PART_SYSTEM /system
+[ ! -d /data/data ] &&         mount -t $FS_DATA -o rw,noatime,nodiratime,errors=continue $PART_DATA /data
+[ ! -f /system/build.prop ] && mount -t $FS_SYSTEM -o rw,noatime,nodiratime,errors=continue $PART_SYSTEM /system
 
 if [ -f /system/build.prop ] ; then
 	echo 0 > /sys/class/leds/red/brightness
@@ -121,6 +128,5 @@ else
 	echo 0 > /sys/class/leds/green/brightness
 	echo 0 > /sys/class/leds/blue/brightness
 fi
-
 
 exit
