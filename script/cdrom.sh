@@ -3,16 +3,22 @@
 ######## BootMenu Script
 ######## Execute [CDROM Drivers] Tool
 
-
-export PATH=/sbin:/system/xbin:/system/bin
+source /system/bootmenu/script/_config.sh
 
 ######## Main Script
 
-BOARD_UMS_LUNFILE=/sys/devices/platform/usb_mass_storage/lun0/file
 PARTITION=/dev/block/mmcblk1p17
+
+# acm to disable MSC
+sync
+echo acm > /dev/usb_device_mode
+sleep 1
 
 echo $PARTITION > $BOARD_UMS_LUNFILE
 
-echo 'cdrom' > /dev/usb_device_mode
+echo cdrom > /dev/usb_device_mode
+echo usb_mode_msc > /tmp/usbd_current_state
+
+echo $PARTITION > $BOARD_UMS_LUNFILE
 
 exit
