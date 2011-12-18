@@ -33,8 +33,10 @@ endif
 ifneq ($(BOARD_SDEXT_DEVICE),)
     EXTRA_CFLAGS += -DSDEXT_DEVICE=\"$(BOARD_SDEXT_DEVICE)\"
 endif
-ifneq ($(BOARD_MASS_STORAGE_FILE_PATH),)
-    EXTRA_CFLAGS += -DBOARD_UMS_LUNFILE=\"$(BOARD_MASS_STORAGE_FILE_PATH)\"
+
+# ics var used in vold too
+ifneq ($(TARGET_USE_CUSTOM_LUN_FILE_PATH),)
+    EXTRA_CFLAGS += -DBOARD_UMS_LUNFILE=\"$(TARGET_USE_CUSTOM_LUN_FILE_PATH)\"
 endif
 
 # one-shot reboot mode file location
