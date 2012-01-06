@@ -264,7 +264,7 @@ static void set_final_framebuffer(void)
     vi.hsync_len = vi.vsync_len = 0;
 
     if (ioctl(gr_fb_fd, FBIOPUT_VSCREENINFO, &vi) < 0) {
-        perror("active fb swap failed");
+        perror("final fb swap failed");
     }
 }
 
@@ -441,6 +441,7 @@ int gr_init(void)
 
     gr_fb_fd = get_framebuffer(gr_framebuffer);
     if (gr_fb_fd < 0) {
+        perror("unable to get framebuffer");
         gr_exit();
         return -1;
     }
