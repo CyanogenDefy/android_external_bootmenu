@@ -27,7 +27,7 @@ ifeq ($(TARGET_RECOVERY_PIXEL_FORMAT),"RGBX_8888")
 endif
 
 # Reversed 16bits RGB (ics software gralloc)
-#LOCAL_CFLAGS += PIXELS_BGR_16BPP
+#LOCAL_CFLAGS += -DPIXELS_BGR_16BPP
 
 include $(BUILD_STATIC_LIBRARY)
 
