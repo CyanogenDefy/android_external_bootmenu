@@ -21,9 +21,9 @@ mount -o remount,rw rootfs /
 mount -o remount,rw $PART_SYSTEM /system
 ##################################################
 
-if [ -d /system/bootmenu/init.d ]; then
-    chmod 755 /system/bootmenu/init.d/*
-    run-parts /system/bootmenu/init.d/
+if [ -d $BM_ROOTDIR/init.d ]; then
+    chmod 755 $BM_ROOTDIR/init.d/*
+    run-parts $BM_ROOTDIR/init.d/
 fi
 
 # normal cleanup here (need fix in recovery first)
@@ -53,7 +53,5 @@ fi
 mount -o remount,ro rootfs /
 mount -o remount,ro $PART_SYSTEM /system
 ##################################################
-
-/system/bootmenu/script/media_fixup.sh &
 
 exit 0

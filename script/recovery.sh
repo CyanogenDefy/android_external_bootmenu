@@ -26,9 +26,9 @@ mkdir /sdcard
 chmod 755 /sbin
 chmod 755 /res
 
-cp -r -f /system/bootmenu/recovery/res/* /res/
-cp -p -f /system/bootmenu/recovery/sbin/* /sbin/
-cp -p -f /system/bootmenu/script/recoveryexit.sh /sbin/
+cp -r -f $BM_ROOTDIR/recovery/res/* /res/
+cp -p -f $BM_ROOTDIR/recovery/sbin/* /sbin/
+cp -p -f $BM_ROOTDIR/script/recoveryexit.sh /sbin/
 
 if [ ! -f /sbin/recovery ]; then
     ln -s /sbin/recovery_stable /sbin/recovery
@@ -51,11 +51,11 @@ chmod +rx /sbin/*
 rm -f /sbin/postrecoveryboot.sh
 
 if [ ! -e /etc/recovery.fstab ]; then
-    cp /system/bootmenu/recovery/recovery.fstab /etc/recovery.fstab
+    cp $BM_ROOTDIR/recovery/recovery.fstab /etc/recovery.fstab
 fi
 
 # for ext3 format
-cp /system/etc/mke2fs.conf /etc/
+cp $BM_ROOTDIR/config/mke2fs.conf /etc/
 
 mkdir -p /cache/recovery
 touch /cache/recovery/command
@@ -85,8 +85,7 @@ ps | grep -v grep | grep adbd
 ret=$?
 
 if [ ! $ret -eq 0 ]; then
-   # chmod 755 /system/bootmenu/script/adbd.sh
-   # /system/bootmenu/script/adbd.sh
+   # $BM_ROOTDIR/script/adbd.sh
 
    # don't use adbd here, will load many android process which locks /system
    killall adbd
@@ -111,17 +110,10 @@ echo 0 > /sys/class/leds/blue/brightness
 
 #############################
 
-# turn on button backlight (back button is used in CWM Recovery 3.x)
-echo 1 > /sys/class/leds/button-backlight/brightness
-
-
 /sbin/recovery
 
 
 # Post Recovery (back to bootmenu)
-
-# bootmenu support buttons too...
-# echo 0 > /sys/class/leds/button-backlight/brightness
 
 # remount system & data if unmounted
 [ ! -d /data/data ] &&         mount -t $FS_DATA -o rw,noatime,nodiratime,errors=continue $PART_DATA /data
@@ -136,6 +128,5 @@ else
 	echo 0 > /sys/class/leds/green/brightness
 	echo 0 > /sys/class/leds/blue/brightness
 fi
-
 
 exit
