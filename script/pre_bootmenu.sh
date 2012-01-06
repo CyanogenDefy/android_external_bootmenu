@@ -5,7 +5,9 @@
 
 export PATH=/sbin:/system/xbin:/system/bin
 
+source /system/bootmenu/script/_config.sh
 PART_CACHE=/dev/block/mmcblk1p24
+FS_CACHE=ext3
 
 ######## Main Script
 
@@ -51,11 +53,12 @@ cp -f /system/bootmenu/binary/adbd /sbin/adbd.root
 chown 0.0 /sbin/adbd.root
 chmod 4755 /sbin/adbd.root
 
+chmod 666 /dev/graphics/fb0
+
 ## missing system files
 [ ! -c /dev/tty0 ]  && ln -s /dev/tty /dev/tty0
 
 ## /default.prop replace.. (TODO: check if that works)
-rm -f /default.prop
 cp -f /system/bootmenu/config/default.prop /default.prop
 
 ## mount cache
@@ -68,7 +71,7 @@ fi
 
 # mount cache for boot mode and recovery logs
 if [ ! -d /cache/recovery ]; then
-    mount -t ext3 -o nosuid,nodev,noatime,nodiratime,barrier=1 $PART_CACHE /cache
+    mount -t $FS_CACHE -o nosuid,nodev,noatime,nodiratime,barrier=1 $PART_CACHE /cache
 fi
 
 mkdir -p /cache/bootmenu
