@@ -830,6 +830,13 @@ int exec_and_wait(char** argp) {
     sigprocmask(SIG_SETMASK, &omask, NULL);
     execve(argp[0], argp, environ);
 
+    // execve require the full path of binary in argp[0]
+    if (errno == 2 && strncmp(argp[0], "/", 1)) {
+        char bin[PATH_MAX] = "/system/bin/";
+        argp[0] = strcat(bin, argp[0]);
+        execve(argp[0], argp, environ);
+    }
+
     fprintf(stdout, "E:Can't run %s (%s)\n", argp[0], strerror(errno));
     _exit(127);
   }
