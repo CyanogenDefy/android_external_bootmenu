@@ -13,7 +13,7 @@ bootmenu_sources := \
     default_bootmenu_ui.c \
     ui.c \
 
-BOOTMENU_VERSION:=1.1.2
+BOOTMENU_VERSION:=1.1.3
 
 # Variables available in BoardConfig.mk related to mount devices
 EXTRA_CFLAGS :=
@@ -42,6 +42,11 @@ endif
 # one-shot reboot mode file location
 ifneq ($(BOARD_BOOTMODE_CONFIG_FILE),)
     EXTRA_CFLAGS += -DBOOTMODE_CONFIG_FILE=\"$(BOARD_BOOTMODE_CONFIG_FILE)\"
+endif
+
+# Special flag for unlocked devices (allow normal boot)
+ifeq ($(TARGET_BOOTLOADER_BOARD_NAME),olympus)
+    EXTRA_CFLAGS += -DUNLOCKED_DEVICE
 endif
 
 ######################################

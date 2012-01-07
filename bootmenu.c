@@ -312,7 +312,7 @@ static int run_bootmenu(void) {
           exec_script(FILE_ADBD, DISABLE);
           status = BUTTON_PRESSED;
       }
-#if STOCK_VERSION
+#ifdef ALLOW_BOOT_NORMAL
       else if (mode == int_mode("normal") || mode == int_mode("normal-adb")) {
           led_alert("blue", DISABLE);
           stk_boot(DISABLE);
@@ -381,7 +381,6 @@ int main(int argc, char **argv) {
     return result;
   }
   else if (argc >= 3 && 0 == strcmp(argv[2], "userdata")) {
-    //real_execute(argc, argv);
     result = run_bootmenu();
     real_execute(argc, argv);
     bypass_sign("no");

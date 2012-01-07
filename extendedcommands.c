@@ -45,7 +45,7 @@ const char* modes[] = {
   "shell",
 };
 
-//user friendly menu labels
+// user friendly menu labels
 #define LABEL_2NDINIT    "2nd-init"
 #define LABEL_2NDBOOT    "2nd-boot"
 #define LABEL_NORMAL     "Stock"
@@ -168,7 +168,7 @@ int show_menu_boot(void) {
         status = snd_boot(ENABLE);
         return (status == 0);
     }
-#if STOCK_VERSION
+#ifdef ALLOW_BOOT_NORMAL
     else if (chosen_item == BOOT_NORMAL) {
         free_menu_headers(title_headers);
         if (next_bootmode_write( str_mode(chosen_item) ) != 0) {
@@ -274,7 +274,7 @@ int show_config_bootmode(void) {
       res=1;
       break;
     }
-#if !STOCK_VERSION
+#ifndef ALLOW_BOOT_NORMAL
     if (chosen_item == BOOT_NORMAL || chosen_item == BOOT_NORMAL_D) {
       //back, disable stock boot in CyanogenMod
       res=1;
@@ -474,7 +474,7 @@ int show_menu_tools(void) {
  */
 int show_menu_recovery(void) {
 
-#if STOCK_VERSION
+#ifndef USE_STABLE_RECOVERY
   #define RECOVERY_CUSTOM     0
   #define RECOVERY_STOCK      1
 #else
@@ -496,12 +496,10 @@ int show_menu_recovery(void) {
 
   char* items[] =  {
         "  [Custom Recovery]",
-#if STOCK_VERSION
-        "  [Stock Recovery]",
-#else
+#ifdef USE_STABLE_RECOVERY
         "  [Stable Recovery]",
-        "  [Stock Recovery]",
 #endif
+        "  [Stock Recovery]",
         "  --Go Back.",
         NULL
   };
@@ -516,7 +514,7 @@ int show_menu_recovery(void) {
       if (!status) res = 1;
       break;
 
-#if !STOCK_VERSION
+#ifdef USE_STABLE_RECOVERY
     case RECOVERY_STABLE:
       ui_print("Starting Recovery..\n");
       ui_print("This can take a couple of seconds.\n");
@@ -615,7 +613,7 @@ int snd_boot(int ui) {
   return 0;
 }
 
-#if STOCK_VERSION
+#ifdef ALLOW_BOOT_NORMAL
 /**
  * stk_boot()
  *
