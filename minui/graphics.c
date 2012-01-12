@@ -422,9 +422,9 @@ int gr_init(void)
     gr_mem_surface.data = NULL;
 
     gr_init_font();
-    gr_vt_fd = open("/dev/tty", O_RDWR | O_SYNC);
+    gr_vt_fd = open("/dev/tty0", O_RDWR | O_SYNC);
     if (gr_vt_fd < 0) {
-        gr_vt_fd = open("/dev/tty0", O_RDWR | O_SYNC);
+        gr_vt_fd = open("/dev/tty", O_RDWR | O_SYNC);
     }
     if (gr_vt_fd < 0) {
         // This is non-fatal; post-Cupcake kernels don't have tty0.

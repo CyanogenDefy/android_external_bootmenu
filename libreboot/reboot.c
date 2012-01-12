@@ -15,12 +15,22 @@
 #endif
 
 #define DBG_LEVEL 0
+//#define OVERRIDE_STOCK_BOOTLOADER
+
+//defined in system/core/libreboot
+#ifndef UNLOCKED_DEVICE
 #define OVERRIDE_STOCK_RECOVERY
-#define OVERRIDE_STOCK_BOOTLOADER
+#endif
+
+#if (DBG_LEVEL)
+#define pr_debug(fmt, ...) printf("reboot: " fmt, ##__VA_ARGS__)
+#else
+#define pr_debug(...)
+#endif
 
 int reboot_wrapper(const char* reason) {
 
-	int ret;
+	int ret = 0;
 	int reboot_with_reason = 0;
 	int need_clear_reason = 0;
 	FILE * config;
@@ -30,10 +40,7 @@ int reboot_wrapper(const char* reason) {
 		reason = REBOOT_REASON_DEFAULT;
 
 		system("rm -f '" BOARD_BOOTMODE_CONFIG_FILE "'");
-
-		#if (DBG_LEVEL)
-		printf("reboot: rm -f " BOARD_BOOTMODE_CONFIG_FILE "\n");
-		#endif
+		pr_debug("rm -f " BOARD_BOOTMODE_CONFIG_FILE "\n");
 
 	} else {
 
@@ -54,11 +61,7 @@ int reboot_wrapper(const char* reason) {
 #ifdef OVERRIDE_STOCK_BOOTLOADER
 			// override bootloader reboot mode
 			ret = fputs("bootmenu", config);
-
-			#if (DBG_LEVEL)
-			printf("reboot: %s->bootmenu " BOARD_BOOTMODE_CONFIG_FILE " (%d)\n", reason, ret);
-			#endif
-
+			pr_debug("%s->bootmenu " BOARD_BOOTMODE_CONFIG_FILE " (%d)\n", reason, ret);
 			need_clear_reason = 1;
 #endif
 		} else if ( 0 == strncmp(reason,"bootmenu", 8) ) {
@@ -67,14 +70,10 @@ int reboot_wrapper(const char* reason) {
 			if (strlen(reason) > 8 && sscanf(reason, "%s %s", dummy, ext_reason) > 0) {
 				// allow "bootmenu recovery" or "bootmenu shell"
 				ret = fputs(ext_reason, config);
-				#if (DBG_LEVEL)
-				printf("reboot: %s->bootmenu " BOARD_BOOTMODE_CONFIG_FILE " (%d)\n", ext_reason, ret);
-				#endif
+				pr_debug("bootmenu %s " BOARD_BOOTMODE_CONFIG_FILE " (%d)\n", ext_reason, ret);
 			} else {
 				ret = fputs(reason, config);
-				#if (DBG_LEVEL)
-				printf("reboot: %s->bootmenu " BOARD_BOOTMODE_CONFIG_FILE " (%d)\n", reason, ret);
-				#endif
+				pr_debug("%s->bootmenu " BOARD_BOOTMODE_CONFIG_FILE " (%d)\n", reason, ret);
 			}
 			need_clear_reason = 1;
 
@@ -82,31 +81,22 @@ int reboot_wrapper(const char* reason) {
 
 			// override bootloader reboot mode
 			ret = fputs("shell", config);
-
-			#if (DBG_LEVEL)
-			printf("reboot: %s->shell " BOARD_BOOTMODE_CONFIG_FILE " (%d)\n", reason, ret);
-			#endif
-
+			pr_debug("%s->shell " BOARD_BOOTMODE_CONFIG_FILE " (%d)\n", reason, ret);
 			need_clear_reason = 1;
 
-#ifndef OVERRIDE_STOCK_RECOVERY
 		} else if ( 0 == strncmp(reason,"recovery",8) ) {
-
+#ifdef OVERRIDE_STOCK_RECOVERY
+			ret = fputs(reason, config);
+			pr_debug("%s->bootmenu recovery " BOARD_BOOTMODE_CONFIG_FILE " (%d)\n", reason, ret);
+			need_clear_reason = 1;
+#else
 			system("rm -f '" BOARD_BOOTMODE_CONFIG_FILE "'");
-
-			#if (DBG_LEVEL)
-			printf("reboot: allowing stock recovery reboot\n");
-			#endif
+			pr_debug("allowing stock recovery reboot\n");
 #endif
 		} else {
-
-			ret = fputs(reason, config);
-
-			#if (DBG_LEVEL)
-			printf("reboot: %s " BOARD_BOOTMODE_CONFIG_FILE " (%d)\n", reason, ret);
-			#endif
-
-			need_clear_reason = 1;
+			//hmm...
+			pr_debug("unhandled reason:%s\n", reason);
+			//need_clear_reason = 1;
 		}
 
 		fflush(config);
