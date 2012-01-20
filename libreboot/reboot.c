@@ -93,7 +93,7 @@ int reboot_wrapper(const char* reason) {
 #endif
 		} else {
 			//hmm...
-			pr_debug("unhandled reason:%s\n"i, reason);
+			pr_debug("unhandled reason:%s\n", reason);
 			//need_clear_reason = 1;
 		}
 
