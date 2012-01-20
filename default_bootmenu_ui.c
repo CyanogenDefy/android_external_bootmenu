@@ -35,6 +35,8 @@ int device_reboot_now(volatile char* key_pressed, int key_code) {
     return 0;
 }
 
+// check for constants in bionic/libc/kernel/common/linux/input.h
+
 int device_handle_key(int key_code, int visible) {
     if (visible) {
         switch (key_code) {
@@ -51,6 +53,7 @@ int device_handle_key(int key_code, int visible) {
             case KEY_END:
             case KEY_SEND:
             case KEY_ENTER:
+            case KEY_MEDIA: /* defy headset button */
                 return SELECT_ITEM;
 
             case KEY_BACKSPACE:
