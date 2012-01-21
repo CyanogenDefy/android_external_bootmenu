@@ -17,8 +17,12 @@
 #endif
 
 #define DBG_LEVEL 0
-#define OVERRIDE_STOCK_RECOVERY
 //#define OVERRIDE_STOCK_BOOTLOADER
+
+//defined in system/core/libreboot
+#ifndef UNLOCKED_DEVICE
+#define OVERRIDE_STOCK_RECOVERY
+#endif
 
 #if (DBG_LEVEL)
 #define pr_debug(fmt, ...) printf("reboot: " fmt, ##__VA_ARGS__)
