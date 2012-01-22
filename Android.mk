@@ -13,7 +13,7 @@ bootmenu_sources := \
     default_bootmenu_ui.c \
     ui.c \
 
-BOOTMENU_VERSION:=1.1.4
+BOOTMENU_VERSION:=1.1.5
 
 # Variables available in BoardConfig.mk related to mount devices
 EXTRA_CFLAGS :=
@@ -46,7 +46,7 @@ endif
 
 # Special flag for unlocked devices (allow normal boot)
 ifeq ($(TARGET_BOOTLOADER_BOARD_NAME),olympus)
-    EXTRA_CFLAGS += -DUNLOCKED_DEVICE -DBOARD_MMC_DEVICE=\"/dev/block/mmcblk0\"
+    EXTRA_CFLAGS += -DUNLOCKED_DEVICE -DBOARD_MMC_DEVICE=\"/dev/block/mmcblk0\" -DNO_OVERCLOCK
 endif
 
 ######################################
