@@ -52,8 +52,10 @@ char* MENU_ITEMS[] = {
     "  +Boot -->",
 #if STOCK_VERSION
     "  +System -->",
-#else
+#elif !defined(NO_OVERCLOCK)
     "  +CPU Settings -->",
+#else
+    "",
 #endif
     "  +Recovery -->",
     "  +Tools -->",
@@ -187,7 +189,7 @@ static void prompt_and_wait() {
       case ITEM_SYSTEM:
         if (show_menu_system()) return;
         break;
-#else
+#elif !defined(NO_OVERCLOCK)
       case ITEM_OVERCLOCK:
         if (show_menu_overclock()) return;
         break;
