@@ -1,7 +1,36 @@
+/*
+ * Copyright (C) 2007-2012 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef EXTENDED_COMMAND_H
+#define EXTENDED_COMMAND_H
+
 #define BM_ROOTDIR "/system/bootmenu"
 
 #ifndef BOOTMODE_CONFIG_FILE
 #define BOOTMODE_CONFIG_FILE "/cache/recovery/bootmode.conf"
+#endif
+
+// normal boot (without 2nd-init)
+#if STOCK_VERSION || defined(UNLOCKED_DEVICE)
+#define ALLOW_BOOT_NORMAL
+#endif
+
+// one or 2 recovery binaries
+#if !STOCK_VERSION
+#define USE_STABLE_RECOVERY
 #endif
 
 static const char *FILE_PRE_MENU  = BM_ROOTDIR "/script/pre_bootmenu.sh";
@@ -75,3 +104,4 @@ int real_execute(int r_argc, char** r_argv);
 int set_usb_device_mode(const char *mode);
 int mount_usb_storage(const char *part);
 
+#endif // EXTENDED_COMMAND_H
