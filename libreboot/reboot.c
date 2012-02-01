@@ -72,21 +72,6 @@ int reboot_wrapper(const char* reason) {
 			if (strlen(reason) > 8 && sscanf(reason, "%s %s", dummy, ext_reason) > 0) {
 				// allow "bootmenu recovery" or "bootmenu shell"
 				ret = fputs(ext_reason, config);
-				pr_debug("bootmenu %s " BOARD_BOOTMODE_CONFIG_FILE " (%d)\n", ext_reason, ret);
-			} else {
-				ret = fputs(reason, config);
-				pr_debug("%s->bootmenu " BOARD_BOOTMODE_CONFIG_FILE " (%d)\n", reason, ret);
-			}
-			need_clear_reason = 1;
-
-			need_clear_reason = 1;
-#endif
-		} else if ( 0 == strncmp(reason,"bootmenu", 8) ) {
-
-			char ext_reason[128], dummy[10];
-			if (strlen(reason) > 8 && sscanf(reason, "%s %s", dummy, ext_reason) > 0) {
-				// allow "bootmenu recovery" or "bootmenu shell"
-				ret = fputs(ext_reason, config);
 				#if (DBG_LEVEL)
 				printf("reboot: %s->bootmenu " BOARD_BOOTMODE_CONFIG_FILE " (%d)\n", ext_reason, ret);
 				#endif
