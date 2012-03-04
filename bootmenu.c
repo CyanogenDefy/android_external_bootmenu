@@ -265,7 +265,7 @@ static int run_bootmenu(void) {
     defmode = get_default_bootmode();
 
     // get and clean one shot bootmode (or default)
-    mode = get_bootmode(1);
+    mode = get_bootmode(1,1);
 
     if (mode == int_mode("bootmenu")
      || mode == int_mode("recovery")
@@ -277,7 +277,9 @@ static int run_bootmenu(void) {
 
     // only start adb if usb is connected
     if (usb_connected()) {
-      if (mode == int_mode("2nd-init-adb") || mode == int_mode("2nd-boot-adb")) {
+      if (mode == int_mode("2nd-init-adb")
+       || mode == int_mode("2nd-boot-adb")
+       || mode == int_mode("2nd-system-adb")) {
          exec_script(FILE_ADBD, DISABLE);
          adb_started = 1;
       }
@@ -304,6 +306,15 @@ static int run_bootmenu(void) {
           led_alert("red", DISABLE);
           status = BUTTON_TIMEOUT;
       }
+      else if (mode == int_mode("2nd-system") || mode == int_mode("2nd-system-adb")) {
+          led_alert("blue", DISABLE);
+          led_alert("red", ENABLE);
+          led_alert("green", ENABLE);
+          snd_system(DISABLE);
+          led_alert("red", DISABLE);
+          led_alert("green", DISABLE);
+          status = BUTTON_TIMEOUT;
+      }
       else if (mode == int_mode("recovery")) {
           led_alert("blue", DISABLE);
           exec_script(FILE_STABLERECOVERY, DISABLE);
@@ -314,13 +325,11 @@ static int run_bootmenu(void) {
           exec_script(FILE_ADBD, DISABLE);
           status = BUTTON_PRESSED;
       }
-#ifdef ALLOW_BOOT_NORMAL
       else if (mode == int_mode("normal") || mode == int_mode("normal-adb")) {
           led_alert("blue", DISABLE);
           stk_boot(DISABLE);
           status = BUTTON_TIMEOUT;
       }
-#endif
 
     }
 
@@ -329,6 +338,7 @@ static int run_bootmenu(void) {
         ui_init();
         ui_set_background(BACKGROUND_DEFAULT);
         ui_show_text(ENABLE);
+        led_alert("button-backlight", ENABLE);
         LOGI("Start Android BootMenu....\n");
 
         main_headers = prepend_title((const char**)MENU_HEADERS);
