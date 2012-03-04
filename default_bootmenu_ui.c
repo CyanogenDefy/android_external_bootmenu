@@ -53,7 +53,7 @@ int device_handle_key(int key_code, int visible) {
             case KEY_END:
             case KEY_SEND:
             case KEY_ENTER:
-            case KEY_MEDIA: /* defy headset button */
+            case KEY_MEDIA: /* headset button */
                 return SELECT_ITEM;
 
             case KEY_BACKSPACE:
