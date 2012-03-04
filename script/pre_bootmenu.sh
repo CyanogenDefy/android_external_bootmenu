@@ -6,8 +6,6 @@
 export PATH=/sbin:/system/xbin:/system/bin
 
 source /system/bootmenu/script/_config.sh
-PART_CACHE=/dev/block/mmcblk1p24
-FS_CACHE=ext3
 
 ######## Main Script
 

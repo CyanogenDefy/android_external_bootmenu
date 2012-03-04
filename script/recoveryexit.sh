@@ -1,4 +1,4 @@
-#!/sbin/busybox ash
+#!/sbin/sh
 
 if [ ! -x /system/bin/bootmenu ]; then
     mount /system

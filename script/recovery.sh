@@ -15,7 +15,7 @@ mkdir -p /res
 rm -f /etc
 mkdir /etc
 
-# hijack mke2fs & tune2fs CWM3
+# hijack mke2fs CWM3
 rm -f /sbin/mke2fs
 rm -f /sbin/tune2fs
 rm -f /sbin/e2fsck
@@ -28,7 +28,6 @@ chmod 755 /res
 
 cp -r -f $BM_ROOTDIR/recovery/res/* /res/
 cp -p -f $BM_ROOTDIR/recovery/sbin/* /sbin/
-cp -p -f $BM_ROOTDIR/script/recoveryexit.sh /sbin/
 
 if [ ! -f /sbin/recovery ]; then
     ln -s /sbin/recovery_stable /sbin/recovery
@@ -64,22 +63,6 @@ touch /cache/recovery/last_log
 touch /tmp/recovery.log
 
 killall adbd
-
-# mount image of pds, for backup purpose (4MB)
-[ ! -d /data/data ] && mount -t $FS_DATA -o rw,noatime,nodiratime,errors=continue $PART_DATA /data
-if [ ! -f /data/pds.img ]; then
-    /system/etc/init.d/04pdsbackup
-    umount /pds
-    losetup -d /dev/block/loop7
-fi
-cp /data/pds.img /tmp/pds.img
-if [ -f /tmp/pds.img ] ; then
-    mkdir -p /pds
-    umount /pds 2>/dev/null
-    losetup -d /dev/block/loop7 2>/dev/null
-    losetup /dev/block/loop7 /tmp/pds.img
-    busybox mount -o rw,nosuid,nodev,noatime,nodiratime,barrier=1 /dev/block/loop7 /pds
-fi
 
 ps | grep -v grep | grep adbd
 ret=$?
