@@ -141,6 +141,16 @@ int show_menu_boot(void) {
     sprintf(lndef,"  +Set Default: [%s] -->", str_mode(bootmode) );
     items[0] = lndef;
 
+    //Hide unavailables modes
+    if (!file_exists((char*) FILE_STOCK)) {
+        items[BOOT_NORMAL] = "";
+        items[BOOT_NORMAL_D] = "";
+    }
+    if (!file_exists((char*) BOOT_2NDSYSTEM)) {
+        items[BOOT_2NDSYSTEM] = "";
+        items[BOOT_2NDSYST_D] = "";
+    }
+
     chosen_item = get_menu_selection(title_headers, items, 1, 0);
 
     if (chosen_item == GO_BACK) {
@@ -190,7 +200,6 @@ int show_menu_boot(void) {
         res = (status == 0);
         goto exit_loop;
     }
-#ifdef ALLOW_BOOT_NORMAL
     else if (chosen_item == BOOT_NORMAL) {
         if (next_bootmode_write( str_mode(chosen_item) ) != 0) {
             //write error
@@ -206,7 +215,6 @@ int show_menu_boot(void) {
         res = (status == 0);
         goto exit_loop;
     }
-#endif
     else
     switch (chosen_item) {
 #ifdef DEBUG_ALLOC
@@ -296,13 +304,13 @@ int show_config_bootmode(void) {
       res=1;
       break;
     }
-#ifndef ALLOW_BOOT_NORMAL
     if (chosen_item == BOOT_NORMAL || chosen_item == BOOT_NORMAL_D) {
-      //disable stock boot in CyanogenMod for locked devices
-      LOGI("Function disabled in this version\n");
-      continue;
+      if (!file_exists((char*) FILE_STOCK)) {
+        //disable stock boot in CyanogenMod for locked devices
+        LOGI("Function disabled in this version\n");
+        continue;
+      }
     }
-#endif
     if (chosen_item == BOOT_2NDSYSTEM || chosen_item == BOOT_2NDSYST_D) {
       if (!file_exists((char*) FILE_2NDSYSTEM)) {
         LOGE("Script not found :\n%s\n", FILE_2NDSYSTEM);
@@ -682,7 +690,6 @@ int snd_system(int ui) {
   return 0;
 }
 
-#ifdef ALLOW_BOOT_NORMAL
 /**
  * stk_boot()
  *
@@ -710,7 +717,6 @@ int stk_boot(int ui) {
   bypass_sign("no");
   return 0;
 }
-#endif
 
 // --------------------------------------------------------
 
