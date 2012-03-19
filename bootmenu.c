@@ -325,13 +325,11 @@ static int run_bootmenu(void) {
           exec_script(FILE_ADBD, DISABLE);
           status = BUTTON_PRESSED;
       }
-#ifdef ALLOW_BOOT_NORMAL
       else if (mode == int_mode("normal") || mode == int_mode("normal-adb")) {
           led_alert("blue", DISABLE);
           stk_boot(DISABLE);
           status = BUTTON_TIMEOUT;
       }
-#endif
 
     }
 

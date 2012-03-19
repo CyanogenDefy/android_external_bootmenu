@@ -23,11 +23,6 @@
 #define BOOTMODE_CONFIG_FILE "/cache/recovery/bootmode.conf"
 #endif
 
-// normal boot (without 2nd-init)
-#if STOCK_VERSION || defined(UNLOCKED_DEVICE)
-#define ALLOW_BOOT_NORMAL
-#endif
-
 // one or 2 recovery binaries
 #if !STOCK_VERSION
 #define USE_STABLE_RECOVERY
