@@ -52,10 +52,10 @@ const char* modes[] = {
 #define LABEL_2NDBOOT    "2nd-boot"
 #define LABEL_2NDSYSTEM  "2nd-system"
 #define LABEL_NORMAL     "Direct"
-#define LABEL_2NDINIT_D  "2nd-init + adb"
-#define LABEL_2NDBOOT_D  "2nd-boot + adb"
-#define LABEL_2NDSYST_D  "2nd-system + adb"
-#define LABEL_NORMAL_D   "Direct + adb"
+
+#define LABEL_TOGGLE_ADB "ADB :"
+
+static bool boot_with_adb = false;
 
 /**
  * int_mode()
@@ -93,15 +93,12 @@ int show_menu_boot(void) {
   #define BOOT_2NDSYSTEM  3
   #define BOOT_NORMAL     4
 
-  #define BOOT_2NDINIT_D  5
-  #define BOOT_2NDBOOT_D  6
-  #define BOOT_2NDSYST_D  7
-  #define BOOT_NORMAL_D   8
+  #define TOGGLE_ADB      5
 
-  #define BOOT_FBTEST     9
-  #define BOOT_EVTTEST   10
-  #define BOOT_PNGTEST   11
-  #define BOOT_TEST      12
+  #define BOOT_FBTEST     6
+  #define BOOT_EVTTEST    7
+  #define BOOT_PNGTEST    8
+  #define BOOT_TEST       9
 
   int status, res = 0;
   const char* headers[] = {
@@ -112,15 +109,13 @@ int show_menu_boot(void) {
   char** title_headers = prepend_title(headers);
 
   char* items[(MODES_COUNT - 3 + 6)] = {
-        "  +Set Default: [" LABEL_2NDINIT_D "] -->",
+        "  +Set Default: [" LABEL_2NDINIT "] -->",
         "  [" LABEL_2NDINIT "]",
         "  [" LABEL_2NDBOOT "]",
         "  [" LABEL_2NDSYSTEM "]",
         "  [" LABEL_NORMAL "]",
-        "  [" LABEL_2NDINIT_D "]",
-        "  [" LABEL_2NDBOOT_D "]",
-        "  [" LABEL_2NDSYST_D "]",
-        "  [" LABEL_NORMAL_D "]",
+
+        "  [" LABEL_TOGGLE_ADB "]",
 
 #ifdef DEBUG_ALLOC
         "  [test fb]",
@@ -132,24 +127,27 @@ int show_menu_boot(void) {
         NULL
   };
 
-  char lndef[64];
+  char opt_def[64];
+  char opt_adb[32];
   int chosen_item, bootmode;
 
   for (;;) {
     bootmode = get_default_bootmode();
 
-    sprintf(lndef,"  +Set Default: [%s] -->", str_mode(bootmode) );
-    items[0] = lndef;
+    sprintf(opt_def, "  +Set Default: [%s] -->", str_mode(bootmode) );
+    items[0] = opt_def;
 
     //Hide unavailables modes
     if (!file_exists((char*) FILE_STOCK)) {
         items[BOOT_NORMAL] = "";
-        items[BOOT_NORMAL_D] = "";
     }
-    if (!file_exists((char*) BOOT_2NDSYSTEM)) {
+    if (!file_exists((char*) FILE_2NDSYSTEM)) {
         items[BOOT_2NDSYSTEM] = "";
-        items[BOOT_2NDSYST_D] = "";
     }
+
+    //ADB Toggle
+    sprintf(opt_adb, "  " LABEL_TOGGLE_ADB " %s", boot_with_adb?"active":"disabled");
+    items[TOGGLE_ADB] = opt_adb;
 
     chosen_item = get_menu_selection(title_headers, items, 1, 0);
 
@@ -163,14 +161,8 @@ int show_menu_boot(void) {
         continue;
     }
 
-    if (chosen_item == BOOT_2NDSYSTEM || chosen_item == BOOT_2NDSYST_D) {
-        if (!file_exists((char*) FILE_2NDSYSTEM)) {
-            LOGE("Script not found :\n%s\n", FILE_2NDSYSTEM);
-            continue;
-        }
-    }
-
-    //Next boot modes
+    //Next boot mode (after reboot, no more required)
+    /*
     else if (chosen_item < BOOT_NORMAL) {
         if (next_bootmode_write( str_mode(chosen_item) ) != 0) {
             //write error
@@ -179,41 +171,44 @@ int show_menu_boot(void) {
         sync();
         reboot(RB_AUTOBOOT);
         goto exit_loop;
-    }
+    }*/
 
-    //Direct boot modes (with adb)
-    else if (chosen_item == BOOT_2NDINIT_D) {
-        if (usb_connected() && !adb_started()) exec_script(FILE_ADBD, ENABLE);
+    //Direct boot modes
+    else if (chosen_item == BOOT_2NDINIT) {
+        if (boot_with_adb && usb_connected() && !adb_started())
+            exec_script(FILE_ADBD, ENABLE);
         status = snd_init(ENABLE);
         res = (status == 0);
         goto exit_loop;
     }
-    else if (chosen_item == BOOT_2NDBOOT_D) {
-        if (usb_connected() && !adb_started()) exec_script(FILE_ADBD, ENABLE);
+    else if (chosen_item == BOOT_2NDBOOT) {
+        if (boot_with_adb && usb_connected() && !adb_started())
+            exec_script(FILE_ADBD, ENABLE);
         status = snd_boot(ENABLE);
         res = (status == 0);
         goto exit_loop;
     }
-    else if (chosen_item == BOOT_2NDSYST_D) {
-        if (usb_connected() && !adb_started()) exec_script(FILE_ADBD, ENABLE);
+    else if (chosen_item == BOOT_2NDSYSTEM) {
+        if (!file_exists((char*) FILE_2NDSYSTEM)) {
+            LOGE("Script not found :\n%s\n", FILE_2NDSYSTEM);
+            continue;
+        }
+        if (boot_with_adb && usb_connected() && !adb_started())
+            exec_script(FILE_ADBD, ENABLE);
         status = snd_system(ENABLE);
         res = (status == 0);
         goto exit_loop;
     }
     else if (chosen_item == BOOT_NORMAL) {
-        if (next_bootmode_write( str_mode(chosen_item) ) != 0) {
-            //write error
-            continue;
-        }
-        sync();
-        reboot(RB_AUTOBOOT);
-        goto exit_loop;
-    }
-    else if (chosen_item == BOOT_NORMAL_D) {
-        if (usb_connected() && !adb_started()) exec_script(FILE_ADBD, ENABLE);
+        if (boot_with_adb && usb_connected() && !adb_started())
+            exec_script(FILE_ADBD, ENABLE);
         status = stk_boot(ENABLE);
         res = (status == 0);
         goto exit_loop;
+    }
+    else if (chosen_item == TOGGLE_ADB) {
+        boot_with_adb = (boot_with_adb == 0);
+        continue;
     }
     else
     switch (chosen_item) {
@@ -304,14 +299,14 @@ int show_config_bootmode(void) {
       res=1;
       break;
     }
-    if (chosen_item == BOOT_NORMAL || chosen_item == BOOT_NORMAL_D) {
+    if (chosen_item == BOOT_NORMAL) {
       if (!file_exists((char*) FILE_STOCK)) {
         //disable stock boot in CyanogenMod for locked devices
         LOGI("Function disabled in this version\n");
         continue;
       }
     }
-    if (chosen_item == BOOT_2NDSYSTEM || chosen_item == BOOT_2NDSYST_D) {
+    if (chosen_item == BOOT_2NDSYSTEM) {
       if (!file_exists((char*) FILE_2NDSYSTEM)) {
         LOGE("Script not found :\n%s\n", FILE_2NDSYSTEM);
         continue;
