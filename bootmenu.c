@@ -19,7 +19,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/reboot.h>
-//#include <sys/wait.h>
 #include <time.h>
 
 #include <unistd.h>
@@ -64,16 +63,20 @@ char* MENU_ITEMS[] = {
 };
 
 static char** main_headers = NULL;
+static float progress_value = 0.0;
 
 /**
  * prepend_title()
  *
+ * Add fixed bootmenu header before menu items
+ *
+ * Note: Hard to tweak, should maybe be recoded
+ *       without malloc..
  */
 char** prepend_title(const char** headers) {
 
   char* title[] = {
-      "Android Bootmenu <v"
-      EXPAND(BOOTMENU_VERSION) ">",
+      "Android Bootmenu v" BOOTMENU_VERSION,
       "",
       NULL
   };
@@ -118,12 +121,26 @@ int get_menu_selection(char** headers, char** items, int menu_only,
   int chosen_item = -1;
 
   while (chosen_item < 0) {
+
+#ifdef BOARD_WITH_CPCAP
+    int level = battery_level();
+    if (level > 0) {
+      if ((50 * progress_value) != level / 2) {
+          progress_value = level / 100.0;
+          if (level < 20)
+             ui_print("Low battery ! %3d %%\n", level);
+          ui_reset_progress();
+          ui_show_progress(progress_value, 1);
+          ui_set_progress(1.0);
+      }
+    }
+#endif
+
     int key = ui_wait_key();
     int visible = ui_text_visible();
-
     int action = device_handle_key(key, visible);
 
-      if (action < 0) {
+    if (action < 0) {
         switch (action) {
           case HIGHLIGHT_UP:
             --selected;
@@ -141,13 +158,14 @@ int get_menu_selection(char** headers, char** items, int menu_only,
             break;
           case NO_ACTION:
             break;
-      }
+        }
     } else if (!menu_only) {
       chosen_item = action;
     }
   }
 
   ui_end_menu();
+
   return chosen_item;
 }
 
@@ -168,7 +186,7 @@ static void prompt_and_wait() {
   int select = 0;
 
   for (;;) {
-    ui_reset_progress();
+
     int chosen_item = get_menu_selection(main_headers, MENU_ITEMS, 0, select);
 
     // device-specific code may take some action here.  It may
@@ -339,15 +357,14 @@ static int run_bootmenu(void) {
         ui_set_background(BACKGROUND_DEFAULT);
         ui_show_text(ENABLE);
         led_alert("button-backlight", ENABLE);
+
         LOGI("Start Android BootMenu....\n");
 
         main_headers = prepend_title((const char**)MENU_HEADERS);
 
-        /* can be buggy
-
+        /* can be buggy, adb could lock filesystem
         if (!adb_started && usb_connected()) {
             ui_print("Usb connected, starting adb...\n\n");
-            //ui_print("Battery level: %d %%\n", battery_level());
             exec_script(FILE_ADBD, DISABLE);
         }
         */
@@ -363,6 +380,7 @@ static int run_bootmenu(void) {
         }
 
         checkup_report();
+        ui_reset_progress();
 
         prompt_and_wait();
         free_menu_headers(main_headers);

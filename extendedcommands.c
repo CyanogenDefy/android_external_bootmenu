@@ -30,6 +30,10 @@
 #include "minui/minui.h"
 #include "bootmenu_ui.h"
 
+#ifdef BOARD_WITH_CPCAP
+#include "battery/batt_cpcap.h"
+#endif
+
 //#define DEBUG_ALLOC
 
 #define MODES_COUNT 11
@@ -1042,6 +1046,9 @@ int battery_level() {
     fscanf(f, "%d", &state);
     fclose(f);
   }
+#ifdef BOARD_WITH_CPCAP
+  state = cpcap_batt_percent();
+#endif
   return state;
 }
 

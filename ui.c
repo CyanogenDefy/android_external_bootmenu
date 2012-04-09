@@ -37,24 +37,19 @@
 #define CHAR_WIDTH 10
 #define CHAR_HEIGHT 18
 
-#define PROGRESSBAR_INDETERMINATE_STATES 6
-#define PROGRESSBAR_INDETERMINATE_FPS 15
-
 static pthread_mutex_t gUpdateMutex = PTHREAD_MUTEX_INITIALIZER;
 static gr_surface gBackgroundIcon[NUM_BACKGROUND_ICONS];
-static gr_surface gProgressBarIndeterminate[PROGRESSBAR_INDETERMINATE_STATES];
 static gr_surface gProgressBarEmpty;
 static gr_surface gProgressBarFill;
+
+#define PROGRESSBAR_INDETERMINATE_STATES 1
+#define PROGRESSBAR_INDETERMINATE_FPS 15
+static gr_surface gProgressBarIndeterminate[PROGRESSBAR_INDETERMINATE_STATES];
 
 static const struct { gr_surface* surface; const char *name; } BITMAPS[] = {
     { &gBackgroundIcon[BACKGROUND_DEFAULT], "background" },
     { &gBackgroundIcon[BACKGROUND_ALT], "background" },
     { &gProgressBarIndeterminate[0],    "indeterminate1" },
-    { &gProgressBarIndeterminate[1],    "indeterminate2" },
-    { &gProgressBarIndeterminate[2],    "indeterminate3" },
-    { &gProgressBarIndeterminate[3],    "indeterminate4" },
-    { &gProgressBarIndeterminate[4],    "indeterminate5" },
-    { &gProgressBarIndeterminate[5],    "indeterminate6" },
     { &gProgressBarEmpty,               "progress_empty" },
     { &gProgressBarFill,                "progress_fill" },
     { NULL,                             NULL },
@@ -80,6 +75,10 @@ static char text[MAX_ROWS][MAX_COLS];
 static int text_cols = 0, text_rows = 0;
 static int text_col = 0, text_row = 0, text_top = 0;
 static int show_text = 0;
+
+// Progression % used for battery level
+static bool show_percent = true;
+static float percent = 0.0;
 
 static char menu[MAX_ROWS][MAX_COLS];
 static int show_menu = 0;
@@ -121,7 +120,7 @@ static void draw_progress_locked()
     int height = gr_get_height(gProgressBarEmpty);
 
     int dx = (gr_fb_width() - width)/2;
-    int dy = (3*gr_fb_height() + iconHeight - 2*height)/4;
+    int dy = (3*gr_fb_height() + iconHeight - 2*height)/4 - 5;
 
     // Erase behind the progress bar (in case this was a progress-only update)
     gr_color(0, 0, 0, 255);
@@ -136,6 +135,13 @@ static void draw_progress_locked()
         }
         if (pos < width-1) {
           gr_blit(gProgressBarEmpty, pos, 0, width-pos, height, dx+pos, dy);
+        }
+
+        if (pos > 0 && show_percent && percent > 0.0) {
+          char pct[8];
+          sprintf(pct, "%3.0f %%", percent * 100);
+          gr_color(255, 255, 255, 255);
+          gr_text(dx + 8, dy - 4, pct);
         }
     }
 
@@ -422,6 +428,7 @@ void ui_show_progress(float portion, int seconds)
     gProgressScopeTime = time(NULL);
     gProgressScopeDuration = seconds;
     gProgress = 0;
+    percent = gProgressScopeStart;
     update_progress_locked();
     pthread_mutex_unlock(&gUpdateMutex);
 }
@@ -431,6 +438,7 @@ void ui_set_progress(float fraction)
     pthread_mutex_lock(&gUpdateMutex);
     if (fraction < 0.0) fraction = 0.0;
     if (fraction > 1.0) fraction = 1.0;
+    percent = gProgressScopeStart + (fraction * gProgressScopeSize);
     if (gProgressBarType == PROGRESSBAR_TYPE_NORMAL && fraction > gProgress) {
         // Skip updates that aren't visibly different.
         int width = gr_get_width(gProgressBarIndeterminate[0]);
@@ -450,6 +458,7 @@ void ui_reset_progress()
     gProgressScopeStart = gProgressScopeSize = 0;
     gProgressScopeTime = gProgressScopeDuration = 0;
     gProgress = 0;
+    percent = 0.0;
     update_screen_locked();
     pthread_mutex_unlock(&gUpdateMutex);
 }
@@ -520,8 +529,6 @@ int ui_menu_select(int sel) {
     if (show_menu > 0) {
         old_sel = menu_sel;
         menu_sel = sel;
-//        if (menu_sel < 0) menu_sel = 0;
-//        if (menu_sel >= menu_items) menu_sel = menu_items-1;
         if (menu_sel < 0) menu_sel = menu_items + menu_sel;
         if (menu_sel >= menu_items) menu_sel = menu_sel - menu_items;
 
