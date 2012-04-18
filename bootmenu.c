@@ -333,6 +333,11 @@ static int run_bootmenu(void) {
           led_alert("green", DISABLE);
           status = BUTTON_TIMEOUT;
       }
+      else if (mode == int_mode("recovery-dev")) {
+          led_alert("blue", DISABLE);
+          exec_script(FILE_CUSTOMRECOVERY, DISABLE);
+          status = BUTTON_TIMEOUT;
+      }
       else if (mode == int_mode("recovery")) {
           led_alert("blue", DISABLE);
           exec_script(FILE_STABLERECOVERY, DISABLE);
@@ -401,10 +406,17 @@ static int run_bootmenu(void) {
  *
  */
 int main(int argc, char **argv) {
-  char* hijacked_executable = argv[0];
+  char* executable = argv[0];
   int result;
 
-  if (NULL != strstr(hijacked_executable, "bootmenu")) {
+  if (argc == 2 && 0 == strcmp(argv[1], "postbootmenu")) {
+    exec_script(FILE_OVERCLOCK, DISABLE);
+    result = exec_script(FILE_POST_MENU, DISABLE);
+    bypass_sign("no");
+    sync();
+    return result;
+  }
+  else if (NULL != strstr(executable, "bootmenu")) {
     fprintf(stdout, "Run BootMenu..\n");
     result = run_bootmenu();
     sync();
@@ -420,13 +432,6 @@ int main(int argc, char **argv) {
   else if (argc >= 3 && 0 == strcmp(argv[2], "pds")) {
     //kept for stock rom compatibility, please use postbootmenu
     real_execute(argc, argv);
-    exec_script(FILE_OVERCLOCK, DISABLE);
-    result = exec_script(FILE_POST_MENU, DISABLE);
-    bypass_sign("no");
-    sync();
-    return result;
-  }
-  else if (argc == 2 && 0 == strcmp(argv[1], "postbootmenu")) {
     exec_script(FILE_OVERCLOCK, DISABLE);
     result = exec_script(FILE_POST_MENU, DISABLE);
     bypass_sign("no");

@@ -189,7 +189,7 @@ static void draw_screen_locked(void)
             ++i;
         }
 
-        gr_color(255, 255, 0, 255);
+        gr_color(192, 192, 192, 255);
 
         for (; i < text_rows; ++i) {
             draw_text_line(i, text[(i+text_top) % text_rows]);

@@ -36,7 +36,7 @@
 
 //#define DEBUG_ALLOC
 
-#define MODES_COUNT 11
+#define MODES_COUNT 12
 const char* modes[] = {
   "bootmenu",
   "2nd-init",
@@ -48,6 +48,7 @@ const char* modes[] = {
   "2nd-system-adb",
   "normal-adb",
   "recovery",
+  "recovery-dev",
   "shell",
 };
 
@@ -57,7 +58,7 @@ const char* modes[] = {
 #define LABEL_2NDSYSTEM  "2nd-system"
 #define LABEL_NORMAL     "Direct"
 
-#define LABEL_TOGGLE_ADB "ADB :"
+#define LABEL_TOGGLE_ADB "ADB:"
 
 static bool boot_with_adb = false;
 
@@ -150,7 +151,7 @@ int show_menu_boot(void) {
     }
 
     //ADB Toggle
-    sprintf(opt_adb, "  " LABEL_TOGGLE_ADB " %s", boot_with_adb?"active":"disabled");
+    sprintf(opt_adb, "  " LABEL_TOGGLE_ADB " %s", boot_with_adb?"enable":"disable");
     items[TOGGLE_ADB] = opt_adb;
 
     chosen_item = get_menu_selection(title_headers, items, 1, 0);
