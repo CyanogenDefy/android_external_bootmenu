@@ -1,2 +1,4 @@
-Lib reboot replacement to be able to reboot to bootmenu and recovery
+reboot applet replacement to be able to reboot to bootmenu and recovery
+
+gingerbread branch also use reboot.c file as alternative in (system/core/libreboot)
 
