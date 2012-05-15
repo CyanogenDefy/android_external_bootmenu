@@ -16,7 +16,7 @@ bootmenu_sources := \
     default_bootmenu_ui.c \
     ui.c \
 
-BOOTMENU_VERSION:=1.2.0
+BOOTMENU_VERSION:=1.3.0
 
 # Variables available in BoardConfig.mk related to mount devices
 
@@ -61,6 +61,10 @@ endif
 # Special flag for unlocked devices (do not override libreboot for recovery)
 ifeq ($(TARGET_BOOTLOADER_BOARD_NAME),olympus)
     EXTRA_CFLAGS += -DUNLOCKED_DEVICE -DNO_OVERCLOCK
+endif
+
+ifneq ($(BOARD_DEFY_MODEL),DEFY_FROYO)
+    EXTRA_CFLAGS += -DUSE_4_CLOCK_LEVELS
 endif
 
 ######################################
