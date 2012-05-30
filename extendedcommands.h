@@ -99,6 +99,8 @@ int exec_script(const char* filename, int ui);
 int real_execute(int r_argc, char** r_argv);
 int file_exists(char * file);
 
+int snd_exec_script(const char* filename, int ui);
+
 int set_usb_device_mode(const char *mode);
 int mount_usb_storage(const char *part);
 

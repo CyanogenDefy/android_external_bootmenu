@@ -30,9 +30,13 @@
 #include "minui/minui.h"
 #include "bootmenu_ui.h"
 
+#ifdef BOARD_WITH_CPCAP
+#include "battery/batt_cpcap.h"
+#endif
+
 //#define DEBUG_ALLOC
 
-#define MODES_COUNT 11
+#define MODES_COUNT 12
 const char* modes[] = {
   "bootmenu",
   "2nd-init",
@@ -44,6 +48,7 @@ const char* modes[] = {
   "2nd-system-adb",
   "normal-adb",
   "recovery",
+  "recovery-dev",
   "shell",
 };
 
@@ -53,7 +58,7 @@ const char* modes[] = {
 #define LABEL_2NDSYSTEM  "2nd-system"
 #define LABEL_NORMAL     "Direct"
 
-#define LABEL_TOGGLE_ADB "ADB :"
+#define LABEL_TOGGLE_ADB "ADB:"
 
 static bool boot_with_adb = false;
 
@@ -146,7 +151,7 @@ int show_menu_boot(void) {
     }
 
     //ADB Toggle
-    sprintf(opt_adb, "  " LABEL_TOGGLE_ADB " %s", boot_with_adb?"active":"disabled");
+    sprintf(opt_adb, "  " LABEL_TOGGLE_ADB " %s", boot_with_adb?"enable":"disable");
     items[TOGGLE_ADB] = opt_adb;
 
     chosen_item = get_menu_selection(title_headers, items, 1, 0);
@@ -584,7 +589,13 @@ int snd_init(int ui) {
   else
     LOGI("Start " LABEL_2NDINIT " boot....\n");
 
-  status = exec_script(FILE_2NDINIT, ui);
+#ifdef USE_DUALCORE_DIRTY_HACK
+    if(!ui)
+      status = snd_exec_script(FILE_2NDINIT, ui);
+    else
+#endif
+      status = exec_script(FILE_2NDINIT, ui);
+
   if (status) {
     return -1;
     bypass_sign("no");
@@ -622,8 +633,14 @@ int snd_boot(int ui) {
     ui_print("Start " LABEL_2NDBOOT " boot....\n");
   else
     LOGI("Start " LABEL_2NDBOOT " boot....\n");
-
-  status = exec_script(FILE_2NDBOOT, ui);
+  
+#ifdef USE_DUALCORE_DIRTY_HACK
+    if(!ui)
+      status = snd_exec_script(FILE_2NDBOOT, ui);
+    else
+#endif
+      status = exec_script(FILE_2NDBOOT, ui);
+  
   if (status) {
     bypass_sign("no");
     return -1;
@@ -662,7 +679,13 @@ int snd_system(int ui) {
   else
     LOGI("Start " LABEL_2NDSYSTEM " boot....\n");
 
-  status = exec_script(FILE_2NDSYSTEM, ui);
+#ifdef USE_DUALCORE_DIRTY_HACK
+    if(!ui)
+      status = snd_exec_script(FILE_2NDSYSTEM, ui);
+    else
+#endif
+      status = exec_script(FILE_2NDSYSTEM, ui);
+  
   if (status) {
     bypass_sign("no");
     return -1;
@@ -957,6 +980,54 @@ int exec_script(const char* filename, int ui) {
   return 0;
 }
 
+inline int snd_reboot() {
+  sync();
+  return reboot(RB_AUTOBOOT);
+}
+
+/**
+ * snd_exec_script()
+ *
+ * dirty hack for dual core cpus
+ * sometimes 2nd-init doesnt work, when task is not executed on same core
+ * (for more infos search for ptrace() problems related to cpu affinity)
+ *
+ * We need to reboot phone to retry because the phone is not in a proper state
+ */
+int snd_exec_script(const char* filename, int ui) {
+  int status;
+  char** args;
+
+  if (!file_exists((char*) filename)) {
+    LOGE("Script not found :\n%s\n", filename);
+    return snd_reboot();
+  }
+
+  LOGI("exec %s\n", filename);
+
+  chmod(filename, 0755);
+
+  args = malloc(sizeof(char*) * 2);
+  args[0] = (char *) filename;
+  args[1] = NULL;
+
+  status = exec_and_wait(args);
+
+  free(args);
+
+  if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+    if (ui) {
+      LOGE("Error in %s\n(Result: %s)\nWill auto restart now\n", filename, strerror(errno));
+    }
+    else {
+      LOGI("E:Error in %s\n(Result: %s)\nWill auto restart now\n", filename, strerror(errno));
+    }
+    return snd_reboot();
+  }
+
+  return 0;
+}
+
 /**
  * real_execute()
  *
@@ -1042,6 +1113,9 @@ int battery_level() {
     fscanf(f, "%d", &state);
     fclose(f);
   }
+#ifdef BOARD_WITH_CPCAP
+  state = cpcap_batt_percent();
+#endif
   return state;
 }
 
